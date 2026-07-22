@@ -180,9 +180,9 @@
       <button data-view="abstract" class="active">Abstract</button>
       <button data-view="camera">Camera</button>
     </div>
-    <button class="sound-btn" id="soundBtn" aria-pressed="false">
-      <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-      <span id="soundLabel">Sound off</span>
+    <button class="sound-btn on" id="soundBtn" aria-pressed="true">
+      <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+      <span id="soundLabel">Sound on</span>
     </button>
   </div>
 
@@ -293,7 +293,7 @@
     conf:92, confT:92, load:-18, loadT:-18, curve:0.06, curveT:0.06,
     speed:64, speedT:64, setspeed:65, limit:65, dash:0,
     lon:8, lonT:8, lead:0.5,   // longitudinal effort (-brake..+accel), lead position 0..1 or null
-    view:'abstract', sound:false
+    view:'abstract', sound:true
   };
   const lerp=(a,b,t)=>a+(b-a)*t;
 
@@ -708,7 +708,7 @@
   const attnI=document.getElementById('attn'), attnV=document.getElementById('attnVal');
   const shoutEl=document.getElementById('shout'), afterGlow=document.getElementById('afterGlow'), nudgeEl=document.getElementById('nudge');
   const dmBefore=document.getElementById('dmBefore'), dmAfter=document.getElementById('dmAfter');
-  let attnCur=0, _dmA='', _dmB='', _nudge='', _shout=null;
+  let attnCur=0, attnLastCue=0, _dmA='', _dmB='', _nudge='', _shout=null;
   function paintAttn(now){
     const v=attnCur;
     attnV.textContent = v<25?'focused' : v<60?'glancing away' : 'looking away';
@@ -732,12 +732,19 @@
       const alpha=(0.13+0.44*tt)*(0.72+0.5*pulseAmt);
       afterGlow.style.boxShadow=`inset 0 0 ${spread.toFixed(0)}px rgba(${cr},${Math.min(alpha,0.9).toFixed(2)})`;
       if(dmcol!==_dmA){ dmAfter.innerHTML=dmMini(dmcol); _dmA=dmcol; }
-      const txt = tt<0.55?'eyes on the road' : tt<0.82?'hands on the wheel' : 'take the wheel now';
+      const txt = tt<0.55?'eyes on the road' : tt<0.82?'watch the road' : 'look up now';
       if(_nudge!==txt){ nudgeEl.textContent=txt; nudgeEl.classList.add('on'); _nudge=txt; }
       nudgeEl.style.borderColor = warm?'rgba(255,176,32,.5)':'rgba(255,68,56,.65)';
     }
+    // reserved sound: a calm cue that quickens as attention worsens (never on until it matters)
+    if(S.sound && attnCur>=28){
+      const tt=(attnCur-28)/72;
+      if(tt>0.5){ const interval=1100-620*tt;
+        if(now-attnLastCue>interval){ tone(tt>0.8?587:494,0.2,{gain:0.045}); attnLastCue=now; } }
+      else attnLastCue=now;
+    } else attnLastCue=now;
   }
-  attnI.addEventListener('input',e=>{attnCur=+e.target.value;});
+  attnI.addEventListener('input',e=>{ensureAudio();attnCur=+e.target.value;});
 
   resize(); syncLabels(); requestAnimationFrame(frame);
 })();
