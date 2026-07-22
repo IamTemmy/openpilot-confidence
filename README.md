@@ -36,15 +36,27 @@ confidence *is* about the road ahead.
   limit, a tension band grows back from the lead — the fore-aft mirror of steering strain. Hard
   acceleration reads as forward surge chevrons. Together these cover all three actuator limits the
   brief names: steering, brake, and acceleration.
-- **Reserved escalation** — only when a hand-off is likely within seconds does a calm edge-breath
-  and a plain-language prompt appear. Sound is held back for this moment, so it actually means something.
+- **Reserved escalation** — only when a hand-off is likely does a calm edge-breath, a plain-language
+  prompt, and a soft chime appear. Silence and green mean trust, so the escalation actually means something.
+
+## What's in the prototype
+
+- **Three backdrops** — *Abstract* (clean stylized road), *Camera* (a camera-realistic render), and
+  *Real drive*, which composites the live overlay onto real dashcam footage from comma's
+  MIT-licensed [video compression challenge](https://github.com/commaai/comma_video_compression_challenge).
+- **Scenarios + manual sliders** — drive Open highway, Faded markings, Sharp off-ramp, Low-sun glare,
+  Lead braking hard, and more, or steer confidence / steering / longitudinal effort yourself.
+- **Reserved sound** — a single onset cue that escalates only as things worsen; on by default, toggleable.
+- **Nav split** — an optional map panel matching openpilot's real split-screen.
+- **Driver attention, reframed** — a before/after showing openpilot's full-screen "pay attention" shout
+  versus a calm, earlier, graduated nudge that grabs attention without ever covering the road.
 
 ## Why it stays deployable
 
 - Keeps openpilot's real visual language — dark flat chrome, white type, the openpilot green.
 - Doesn't collide with the driver-monitoring icon, which already owns green/amber for driver attention.
 - Flat, QT-friendly, glanceable in windshield-mounted peripheral vision.
-- Reads as *a better openpilot*, not a redesign of the device.
+- Reads as *a better openpilot*, not a redesign — the direction comma's own 0.11.1 release is already heading.
 
 ## Run it locally
 
@@ -55,10 +67,12 @@ python3 -m http.server 8000
 # then visit http://localhost:8000
 ```
 
-Use the scenario chips (Open highway → Faded markings → Sharp off-ramp → Low-sun glare) or the
-Confidence / Steering-effort sliders to drive the states.
+Note: the *Real drive* footage loads via `fetch`, so it appears only when the page is served over
+`http(s)` (the live site, or a local server) — not when opening the file directly via `file://`.
+Use the scenario chips or the Confidence / Steering / Longitudinal sliders to drive the states.
 
 ## Status
 
-v1 concept prototype. The road scene is stylized; the proposal is the interaction model
-(living path, edge strain, reserved escalation). Independent work — not affiliated with comma.ai.
+Concept prototype. Stylized road scenes; *Real drive* overlays a fixed path on recorded footage
+(the shipped version would follow openpilot's per-frame trajectory). The proposal is the interaction
+model — living path, edge strain, reserved escalation. Independent work, not affiliated with comma.ai.

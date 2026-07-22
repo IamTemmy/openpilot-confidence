@@ -184,6 +184,22 @@
   .attn-control label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;}
   .attn-control label b{color:var(--text);font-weight:600;}
   .attn-hint{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:6px;}
+
+  /* ---------- case study ---------- */
+  .case{width:100%;max-width:1040px;}
+  .case .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);font-weight:700;margin-bottom:10px;}
+  .case h2{font-size:clamp(21px,3vw,30px);font-weight:800;letter-spacing:-.01em;margin:0 0 16px;line-height:1.16;}
+  .case p{font-size:14px;line-height:1.7;color:var(--muted);max-width:760px;margin:0 0 14px;}
+  .case p strong{color:var(--text);font-weight:600;}
+  .case .points{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:22px 0 6px;}
+  @media(max-width:760px){.case .points{grid-template-columns:1fr;}}
+  .case .pt{border:1px solid var(--stroke);border-radius:14px;padding:16px;background:var(--panel);}
+  .case .pt h3{font-size:14px;font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:8px;}
+  .case .pt .sw{width:12px;height:12px;border-radius:3px;flex:none;}
+  .case .pt p{font-size:12.5px;margin:0;line-height:1.6;}
+  .case .close{border-top:1px solid var(--stroke);margin-top:24px;padding-top:18px;}
+  .case .close h3{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 10px;font-weight:700;}
+  .case .lim{color:var(--faint);font-size:12.5px;}
 </style>
 </head>
 <body>
@@ -322,6 +338,23 @@
       <label>Driver attention <b id="attnVal">focused</b></label>
       <input type="range" id="attn" min="0" max="100" value="0" />
       <div class="attn-hint"><span>focused</span><span>looking away</span></div>
+    </div>
+  </div>
+
+  <div class="case">
+    <div class="eyebrow">The thinking</div>
+    <h2>Confidence, drawn where confidence lives</h2>
+    <p>openpilot is a Level&nbsp;2 system: it doesn't handle every situation, but it knows how likely it is to struggle. Today the driver only learns that at the last second — an alert that fires <strong>after</strong> the wheel has already run out of torque and the car has begun to drift. By then it's late, and the alert is more annoying than useful. The task was to make that knowledge <strong>continuous, glanceable, and calm.</strong></p>
+    <p>Every other entry reaches for a new gauge — a colored ring, a row of bars, a frame around the screen. We did the opposite. Confidence is about the road ahead, so we made the <strong>path openpilot already draws</strong> carry the meaning. There's nothing new to read: the instrument is the thing you're already looking at.</p>
+    <div class="points">
+      <div class="pt"><h3><span class="sw" style="background:#2FE07A"></span>Reach is confidence</h3><p>A long, solid ribbon means openpilot is sure of the road far ahead. As confidence falls the ribbon dissolves and pulls back toward the car — so you watch trust shorten <em>before</em> anything goes wrong. Continuous, and readable at a glance.</p></div>
+      <div class="pt"><h3><span class="sw" style="background:#FFB020"></span>Strain is headroom</h3><p>The side edge brightens as steering nears its torque limit; a cross-band and the lead's brake lights build as braking nears its authority; forward chevrons surge near the accel limit. All three actuator limits — early and directional, not an alert after the fact.</p></div>
+      <div class="pt"><h3><span class="sw" style="background:#FF4438"></span>Restraint is trust</h3><p>Silence and green mean the system is fine. Sound and color are held back for the moments that matter — a hand-off, a limit, a distracted glance — so when they arrive, they mean something. The same restraint replaces the full-screen "pay attention" shout.</p></div>
+    </div>
+    <div class="close">
+      <h3>Why it ships</h3>
+      <p>It keeps openpilot's real visual language — dark, flat, the openpilot green — and it doesn't collide with the driver-monitoring icon, which already owns green and amber for attention. It's glanceable in windshield peripheral vision, and the <strong>Real drive</strong> view shows the exact overlay sitting on comma's own dashcam footage, unchanged. This reads as a better openpilot, not a redesign of the device — and it points the same direction comma's 0.11.1 release is already heading: subtle, earlier cues instead of late, loud ones.</p>
+      <p class="lim">Honest limits: this is a concept prototype. In Real drive the path is a fixed straight overlay on recorded footage — the shipped version would follow the trajectory openpilot computes each frame — and the clip can't change to match a scenario. The proposal is the interaction model, not the footage.</p>
     </div>
   </div>
 
