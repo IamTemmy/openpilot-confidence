@@ -44,12 +44,32 @@
   .sound-btn.on{color:var(--go);border-color:rgba(47,224,122,.4);}
   .sound-btn:focus-visible{outline:2px solid var(--go);outline-offset:2px;}
   .sound-btn svg{width:15px;height:15px;}
+  .tools-right{display:flex;gap:10px;align-items:center;}
+  .pill-btn{display:inline-flex;align-items:center;gap:8px;background:var(--panel);
+    border:1px solid var(--stroke);border-radius:12px;padding:8px 14px;color:var(--muted);
+    font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:color .16s,border-color .16s;}
+  .pill-btn.on{color:var(--go);border-color:rgba(47,224,122,.4);}
+  .pill-btn:focus-visible{outline:2px solid var(--go);outline-offset:2px;}
+  .pill-btn svg{width:15px;height:15px;}
 
   /* ---------- device ---------- */
   .device-wrap{width:100%;max-width:1040px;}
   .device{position:relative;width:100%;aspect-ratio:2.16 / 1;border-radius:20px;
-    overflow:hidden;background:#000;box-shadow:0 24px 70px -20px rgba(0,0,0,.8),0 0 0 1px #12181f;}
+    overflow:hidden;background:#000;box-shadow:0 24px 70px -20px rgba(0,0,0,.8),0 0 0 1px #12181f;display:flex;}
+  .stage{position:relative;flex:1 1 auto;min-width:0;height:100%;overflow:hidden;}
   canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .nav{flex:0 0 auto;width:0;height:100%;overflow:hidden;background:#0a0e12;
+    transition:width .4s ease;display:flex;flex-direction:column;}
+  .device.nav-on .nav{width:38%;border-left:1px solid #12181f;}
+  .nav-top{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#0c1218;border-bottom:1px solid #141b22;}
+  .nav-turn{width:26px;height:26px;color:var(--go);flex:none;}
+  .nav-inst{min-width:0;}
+  .nav-dist{font-size:clamp(15px,2vw,20px);font-weight:800;line-height:1;}
+  .nav-street{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .nav-map{flex:1 1 auto;width:100%;min-height:0;display:block;}
+  .nav-eta{display:flex;justify-content:space-around;gap:6px;padding:9px 8px;background:#0c1218;border-top:1px solid #141b22;
+    font-size:clamp(10px,1.4vw,13px);font-variant-numeric:tabular-nums;}
+  .nav-eta .t{font-weight:700;} .nav-eta .m{color:var(--go);font-weight:700;} .nav-eta .d{color:var(--muted);font-weight:600;}
 
   .periph{position:absolute;inset:0;pointer-events:none;border-radius:20px;
     box-shadow:inset 0 0 0 0 rgba(0,0,0,0);transition:box-shadow .5s ease;z-index:5;}
@@ -180,25 +200,49 @@
       <button data-view="abstract" class="active">Abstract</button>
       <button data-view="camera">Camera</button>
     </div>
-    <button class="sound-btn on" id="soundBtn" aria-pressed="true">
-      <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
-      <span id="soundLabel">Sound on</span>
-    </button>
+    <div class="tools-right">
+      <button class="pill-btn" id="navBtn" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        <span>Nav</span>
+      </button>
+      <button class="sound-btn on" id="soundBtn" aria-pressed="true">
+        <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+        <span id="soundLabel">Sound on</span>
+      </button>
+    </div>
   </div>
 
   <div class="device-wrap">
-    <div class="device">
-      <canvas id="road"></canvas>
-      <div class="periph" id="periph"></div>
-      <div class="hud">
-        <div class="tl">
-          <div class="setspeed"><div class="lbl">MAX</div><div class="val" id="setspeed">65</div></div>
-          <div class="limit"><div class="t">SPEED<br>LIMIT</div><div class="n" id="limit">65</div></div>
+    <div class="device" id="device">
+      <div class="stage">
+        <canvas id="road"></canvas>
+        <div class="periph" id="periph"></div>
+        <div class="hud">
+          <div class="tl">
+            <div class="setspeed"><div class="lbl">MAX</div><div class="val" id="setspeed">65</div></div>
+            <div class="limit"><div class="t">SPEED<br>LIMIT</div><div class="n" id="limit">65</div></div>
+          </div>
+          <div class="speed"><div class="n" id="speed">64</div><div class="u">mph</div></div>
+          <div class="tr"><div class="wheel" id="wheel"></div></div>
+          <div class="dm" id="dm"></div>
+          <div class="status" id="status"><span class="dot"></span><span class="txt">engaged</span></div>
         </div>
-        <div class="speed"><div class="n" id="speed">64</div><div class="u">mph</div></div>
-        <div class="tr"><div class="wheel" id="wheel"></div></div>
-        <div class="dm" id="dm"></div>
-        <div class="status" id="status"><span class="dot"></span><span class="txt">engaged</span></div>
+      </div>
+      <div class="nav" id="navPanel">
+        <div class="nav-top">
+          <svg class="nav-turn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V9a3 3 0 0 1 3-3h5"/><polyline points="13 2 18 6 13 10"/></svg>
+          <div class="nav-inst"><div class="nav-dist">0.5 mi</div><div class="nav-street">Cabrillo Road</div></div>
+        </div>
+        <svg class="nav-map" viewBox="0 0 300 460" preserveAspectRatio="xMidYMid slice">
+          <rect width="300" height="460" fill="#0a0e12"/>
+          <path d="M-20 300 L120 250 L360 360" stroke="#222b33" stroke-width="16" fill="none"/>
+          <path d="M60 -20 L150 200 L110 480" stroke="#222b33" stroke-width="22" fill="none"/>
+          <path d="M300 60 L170 210 L210 460" stroke="#1b232b" stroke-width="14" fill="none"/>
+          <path d="M150 440 C150 340 140 300 150 210 C158 150 120 120 150 40" stroke="#2f7dff" stroke-width="7" fill="none" stroke-linecap="round"/>
+          <circle cx="150" cy="44" r="7" fill="#ff4438" stroke="#0a0e12" stroke-width="2"/>
+          <g transform="translate(150 430)"><path d="M0 -13 L11 12 L0 5 L-11 12 Z" fill="#eef4f7"/></g>
+        </svg>
+        <div class="nav-eta"><span class="t">11:00 AM</span><span class="m">4 min</span><span class="d">0.5 mi</span></div>
       </div>
     </div>
   </div>
@@ -318,6 +362,8 @@
     if(!grain) buildGrain();
   }
   window.addEventListener('resize',resize);
+  function ensureSize(){ const r=cv.getBoundingClientRect();
+    if(Math.abs(r.width-W)>0.5||Math.abs(r.height-H)>0.5) resize(); }
 
   const HORIZON=0.30;
   const roadY=t=>H - t*H*(1-HORIZON);
@@ -639,6 +685,7 @@
 
   // ---------- loop ----------
   function frame(now){
+    ensureSize();
     const k=reduce?1:0.09;
     S.conf=lerp(S.conf,S.confT,k); S.load=lerp(S.load,S.loadT,k); S.lon=lerp(S.lon,S.lonT,k);
     S.curve=lerp(S.curve,S.curveT,k); S.speed=lerp(S.speed,S.speedT,k);
@@ -745,6 +792,11 @@
     } else { attnWarned=false; attnLastCue=now; }
   }
   attnI.addEventListener('input',e=>{ensureAudio();attnCur=+e.target.value;});
+
+  // nav split toggle
+  const navBtn=document.getElementById('navBtn'), deviceEl=document.getElementById('device');
+  navBtn.addEventListener('click',()=>{ const on=deviceEl.classList.toggle('nav-on');
+    navBtn.classList.toggle('on',on); navBtn.setAttribute('aria-pressed',on); });
 
   resize(); syncLabels(); requestAnimationFrame(frame);
 })();
