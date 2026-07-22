@@ -124,6 +124,44 @@
 
   .foot{width:100%;max-width:1040px;font-size:12px;color:var(--faint);line-height:1.6;}
   .foot b{color:var(--muted);font-weight:600;}
+
+  /* ---------- driver-attention before/after ---------- */
+  .attn{width:100%;max-width:1040px;background:var(--panel);border:1px solid var(--stroke);
+    border-radius:var(--radius);padding:22px;}
+  .attn-head h2{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin:0 0 8px;font-weight:700;}
+  .attn-head p{font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 18px;max-width:760px;}
+  .attn-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:680px){.attn-grid{grid-template-columns:1fr;}}
+  .attn-frame{position:relative;aspect-ratio:16/9;background:#0b1016;border:1px solid var(--stroke);
+    border-radius:12px;overflow:hidden;}
+  .attn-frame .rd{position:absolute;inset:0;background:linear-gradient(#0a1620 0%,#0b1116 42%);}
+  .attn-frame .asph{position:absolute;left:0;right:0;bottom:0;height:60%;background:#20272d;
+    clip-path:polygon(43% 0,57% 0,100% 100%,0 100%);}
+  .attn-frame .pl{position:absolute;left:50%;bottom:0;width:3px;height:60%;transform:translateX(-50%);
+    background:linear-gradient(to top,rgba(47,224,122,.85),rgba(47,224,122,0));}
+  .attn-frame .dm{position:absolute;left:12px;bottom:12px;width:38px;height:38px;z-index:4;}
+  .attn-label{position:absolute;top:10px;left:12px;z-index:5;font-size:11px;font-weight:700;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+    background:rgba(8,11,15,.62);padding:4px 9px;border-radius:7px;}
+  .attn-label.after{color:var(--go);}
+  .shout{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:center;
+    align-items:flex-start;padding:0 22px;gap:2px;opacity:0;pointer-events:none;
+    background:linear-gradient(120deg,#c8501f,#8a2f12);transition:opacity .1s;}
+  .shout.on{opacity:1;animation:shoutpulse 1s ease-in-out infinite;}
+  @keyframes shoutpulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.2);}}
+  .shout-big{font-size:clamp(22px,5vw,40px);font-weight:800;color:#fff;line-height:1;text-transform:lowercase;}
+  .shout-sub{font-size:clamp(12px,2.2vw,18px);font-weight:600;color:rgba(255,255,255,.72);text-transform:lowercase;}
+  .after-glow{position:absolute;inset:0;z-index:2;border-radius:12px;pointer-events:none;
+    box-shadow:inset 0 0 0 0 rgba(0,0,0,0);transition:box-shadow .5s ease;}
+  .nudge{position:absolute;left:50%;bottom:12px;transform:translateX(-50%) translateY(6px);z-index:4;
+    font-size:12px;font-weight:600;color:#fff;background:rgba(8,11,15,.72);backdrop-filter:blur(6px);
+    border:1px solid var(--stroke);border-radius:999px;padding:6px 13px;opacity:0;
+    transition:opacity .35s,transform .35s,border-color .35s;white-space:nowrap;}
+  .nudge.on{opacity:1;transform:translateX(-50%) translateY(0);}
+  .attn-control{margin-top:18px;}
+  .attn-control label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;}
+  .attn-control label b{color:var(--text);font-weight:600;}
+  .attn-hint{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:6px;}
 </style>
 </head>
 <body>
@@ -209,6 +247,33 @@
         <div><div class="k">Hand-off + sound</div>
           <div class="d">Only when a hand-off is likely does a calm edge-breath, a plain prompt, and a soft reserved chime appear. Silence means trust — so the sound, when it comes, actually means something.</div></div>
       </div>
+    </div>
+  </div>
+
+  <div class="attn">
+    <div class="attn-head">
+      <h2>Driver attention — restraint over shouting</h2>
+      <p>openpilot already knows when your eyes drift — 0.11.1 even warms the driver-monitoring icon before any alert fires. But today that path still ends in a full-screen shout. The same signal can be handled as a calm, earlier, graduated nudge that never hijacks the screen. Drag the attention slider and compare the two.</p>
+    </div>
+    <div class="attn-grid">
+      <div class="attn-frame" id="beforeFrame">
+        <span class="attn-label">openpilot today</span>
+        <div class="rd"></div><div class="asph"></div><div class="pl"></div>
+        <div class="dm" id="dmBefore"></div>
+        <div class="shout" id="shout"><div class="shout-big">pay attention</div><div class="shout-sub">driver distracted</div></div>
+      </div>
+      <div class="attn-frame" id="afterFrame">
+        <span class="attn-label after">this concept</span>
+        <div class="rd"></div><div class="asph"></div><div class="pl"></div>
+        <div class="after-glow" id="afterGlow"></div>
+        <div class="dm" id="dmAfter"></div>
+        <div class="nudge" id="nudge">eyes on the road</div>
+      </div>
+    </div>
+    <div class="attn-control">
+      <label>Driver attention <b id="attnVal">focused</b></label>
+      <input type="range" id="attn" min="0" max="100" value="0" />
+      <div class="attn-hint"><span>focused</span><span>looking away</span></div>
     </div>
   </div>
 
@@ -631,6 +696,33 @@
       ? '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>'
       : '<path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
     if(S.sound) earcon.recover(); });
+
+  // ---------- driver-attention before/after ----------
+  function dmMini(arcColor){
+    return `<svg viewBox="0 0 52 52" width="100%" height="100%">
+      <circle cx="26" cy="26" r="23" fill="rgba(8,11,15,.72)" stroke="#1B242D"/>
+      <path d="M26 13 a13 13 0 0 1 11.3 6.5" fill="none" stroke="${arcColor}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="26" cy="24" r="4" fill="none" stroke="#cfe9d8" stroke-width="2"/>
+      <path d="M19 36 q7 -7 14 0" fill="none" stroke="#cfe9d8" stroke-width="2" stroke-linecap="round"/></svg>`;
+  }
+  const attnI=document.getElementById('attn'), attnV=document.getElementById('attnVal');
+  const shoutEl=document.getElementById('shout'), afterGlow=document.getElementById('afterGlow'), nudgeEl=document.getElementById('nudge');
+  const dmBefore=document.getElementById('dmBefore'), dmAfter=document.getElementById('dmAfter');
+  function renderAttn(v){
+    attnV.textContent = v<25?'focused' : v<60?'glancing away' : 'looking away';
+    // BEFORE — 0.11.1 warms the icon, then it jumps straight to a full-screen shout
+    dmBefore.innerHTML=dmMini(v>40?'#FF7A1A':'#2FE07A');
+    shoutEl.classList.toggle('on', v>55);
+    // AFTER — earlier, gentler, graduated; never a full-screen takeover
+    let arc='#2FE07A', glow='inset 0 0 0 0 rgba(0,0,0,0)', showNudge=false, txt='eyes on the road';
+    if(v>=30 && v<62){ arc='#FFC24D'; glow='inset 0 0 34px rgba(255,176,32,.16)'; showNudge=true; }
+    else if(v>=62){ arc='#FFB020'; glow='inset 0 0 48px rgba(255,176,32,.30)'; showNudge=true; txt='take the wheel — look ahead'; }
+    dmAfter.innerHTML=dmMini(arc);
+    afterGlow.style.boxShadow=glow;
+    nudgeEl.textContent=txt; nudgeEl.classList.toggle('on',showNudge);
+  }
+  attnI.addEventListener('input',e=>renderAttn(+e.target.value));
+  renderAttn(0);
 
   resize(); syncLabels(); requestAnimationFrame(frame);
 })();
