@@ -558,7 +558,7 @@
   // ---------- loop ----------
   function frame(now){
     const k=reduce?1:0.09;
-    S.conf=lerp(S.conf,S.confT,k); S.load=lerp(S.load,S.loadT,k);
+    S.conf=lerp(S.conf,S.confT,k); S.load=lerp(S.load,S.loadT,k); S.lon=lerp(S.lon,S.lonT,k);
     S.curve=lerp(S.curve,S.curveT,k); S.speed=lerp(S.speed,S.speedT,k);
     if(!reduce) S.dash=(S.dash+(0.0018+S.speed*0.00004))%1;
     if(S.view==='camera'){ paintCamera(); paintPath(); paintLongitudinal(reachOf()); paintCameraPost(); }
