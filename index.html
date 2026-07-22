@@ -18,9 +18,8 @@
     font-family:'Inter',system-ui,-apple-system,sans-serif;
     -webkit-font-smoothing:antialiased;font-feature-settings:'tnum','cv01';}
   body{min-height:100vh;display:flex;flex-direction:column;align-items:center;
-    padding:28px 20px 56px;gap:22px;}
+    padding:28px 20px 56px;gap:18px;}
 
-  /* ---------- header ---------- */
   .head{width:100%;max-width:1040px;display:flex;align-items:baseline;
     justify-content:space-between;gap:16px;flex-wrap:wrap;}
   .brand{display:flex;align-items:baseline;gap:12px;}
@@ -29,19 +28,33 @@
   .brand .tag{font-size:12px;color:var(--faint);letter-spacing:.04em;}
   .head .note{font-size:12px;color:var(--faint);max-width:360px;text-align:right;line-height:1.5;}
 
+  /* ---------- toolbar: view toggle + sound ---------- */
+  .toolbar{width:100%;max-width:1040px;display:flex;justify-content:space-between;
+    align-items:center;gap:12px;flex-wrap:wrap;}
+  .seg{display:inline-flex;background:var(--panel);border:1px solid var(--stroke);
+    border-radius:12px;padding:4px;gap:4px;}
+  .seg button{border:none;background:transparent;color:var(--muted);font-family:inherit;
+    font-size:13px;font-weight:600;padding:7px 16px;border-radius:9px;cursor:pointer;
+    transition:color .16s,background .16s;}
+  .seg button.active{background:rgba(47,224,122,.10);color:var(--go);}
+  .seg button:focus-visible{outline:2px solid var(--go);outline-offset:2px;}
+  .sound-btn{display:inline-flex;align-items:center;gap:9px;background:var(--panel);
+    border:1px solid var(--stroke);border-radius:12px;padding:8px 15px;color:var(--muted);
+    font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:color .16s,border-color .16s;}
+  .sound-btn.on{color:var(--go);border-color:rgba(47,224,122,.4);}
+  .sound-btn:focus-visible{outline:2px solid var(--go);outline-offset:2px;}
+  .sound-btn svg{width:15px;height:15px;}
+
   /* ---------- device ---------- */
   .device-wrap{width:100%;max-width:1040px;}
   .device{position:relative;width:100%;aspect-ratio:2.16 / 1;border-radius:20px;
     overflow:hidden;background:#000;box-shadow:0 24px 70px -20px rgba(0,0,0,.8),0 0 0 1px #12181f;}
   canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
 
-  /* peripheral escalation glow — off by default, breathes only when needed */
   .periph{position:absolute;inset:0;pointer-events:none;border-radius:20px;
     box-shadow:inset 0 0 0 0 rgba(0,0,0,0);transition:box-shadow .5s ease;z-index:5;}
 
-  /* chrome overlay */
-  .hud{position:absolute;inset:0;z-index:6;pointer-events:none;
-    padding:clamp(12px,2.4vw,26px);}
+  .hud{position:absolute;inset:0;z-index:6;pointer-events:none;padding:clamp(12px,2.4vw,26px);}
   .tl{position:absolute;top:clamp(12px,2.4vw,26px);left:clamp(12px,2.4vw,26px);
     display:flex;gap:10px;align-items:flex-start;}
   .setspeed{background:rgba(10,14,18,.72);backdrop-filter:blur(8px);
@@ -68,7 +81,6 @@
     width:clamp(40px,5.4vw,56px);height:clamp(40px,5.4vw,56px);}
   .dm svg{width:100%;height:100%;}
 
-  /* status word — appears low & center, only escalates when needed */
   .status{position:absolute;left:0;right:0;bottom:clamp(14px,2.6vw,30px);margin:0 auto;
     width:max-content;display:flex;align-items:center;gap:9px;
     background:rgba(8,11,15,.66);backdrop-filter:blur(8px);border:1px solid var(--stroke);
@@ -80,12 +92,10 @@
 
   /* ---------- control deck ---------- */
   .deck{width:100%;max-width:1040px;background:var(--panel);border:1px solid var(--stroke);
-    border-radius:var(--radius);padding:20px;display:grid;
-    grid-template-columns:1.15fr .85fr;gap:22px;}
+    border-radius:var(--radius);padding:20px;display:grid;grid-template-columns:1.15fr .85fr;gap:22px;}
   @media(max-width:760px){.deck{grid-template-columns:1fr;}}
   .deck h2{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);
     margin:0 0 14px;font-weight:700;}
-
   .scenarios{display:flex;flex-wrap:wrap;gap:8px;}
   .chip{appearance:none;border:1px solid var(--stroke);background:var(--panel-2);color:var(--text);
     font-family:inherit;font-size:13px;font-weight:500;padding:9px 13px;border-radius:11px;
@@ -93,7 +103,6 @@
   .chip:hover{border-color:#2c3a45;}
   .chip.active{border-color:var(--go);color:var(--go);background:rgba(47,224,122,.08);}
   .chip:focus-visible{outline:2px solid var(--go);outline-offset:2px;}
-
   .sliders{display:flex;flex-direction:column;gap:18px;}
   .slider label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);
     margin-bottom:8px;letter-spacing:.02em;}
@@ -126,6 +135,17 @@
     </div>
     <div class="note">A deployable evolution of the openpilot view. Confidence and steering headroom
       live on the path itself — glanceable, predictive, and quiet until it matters.</div>
+  </div>
+
+  <div class="toolbar">
+    <div class="seg" id="viewSeg">
+      <button data-view="abstract" class="active">Abstract</button>
+      <button data-view="camera">Camera</button>
+    </div>
+    <button class="sound-btn" id="soundBtn" aria-pressed="false">
+      <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+      <span id="soundLabel">Sound off</span>
+    </button>
   </div>
 
   <div class="device-wrap">
@@ -168,7 +188,7 @@
       <div class="leg">
         <svg class="sw" width="16" height="16"><rect width="16" height="16" rx="3" fill="#2FE07A"/></svg>
         <div><div class="k">Reach of the path</div>
-          <div class="d">A long solid ribbon means openpilot is sure of the road well ahead. As confidence drops the ribbon dissolves and pulls back toward the car — you see trust shortening before anything goes wrong.</div></div>
+          <div class="d">A long solid ribbon means openpilot is sure of the road well ahead. As confidence drops the ribbon dissolves and pulls back toward the car — you see trust shorten before anything goes wrong.</div></div>
       </div>
       <div class="leg">
         <svg class="sw" width="16" height="16"><rect width="16" height="16" rx="3" fill="#FFB020"/></svg>
@@ -177,15 +197,16 @@
       </div>
       <div class="leg">
         <svg class="sw" width="16" height="16"><rect width="16" height="16" rx="3" fill="#FF4438"/></svg>
-        <div><div class="k">Hand-off</div>
-          <div class="d">Only when a hand-off is likely within seconds does a calm edge-breath and a plain prompt appear. Sound is reserved for this moment, so it means something.</div></div>
+        <div><div class="k">Hand-off + sound</div>
+          <div class="d">Only when a hand-off is likely does a calm edge-breath, a plain prompt, and a soft reserved chime appear. Silence means trust — so the sound, when it comes, actually means something.</div></div>
       </div>
     </div>
   </div>
 
   <div class="foot">
     <b>Note.</b> Independent concept for the comma design challenge — not affiliated with comma.ai.
-    Road scene is stylized; the interaction model (living path, edge strain, reserved escalation) is the proposal.
+    The camera view is a stylized render, not real footage; the proposal is the interaction model
+    (living path, edge strain, reserved escalation) — which is designed to sit on the real camera feed unchanged.
   </div>
 
 <script>
@@ -194,51 +215,94 @@
   const ctx = cv.getContext('2d');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ---- state (targets are eased toward) ----
   const S = {
-    conf:92, confT:92,        // 0..100
-    load:-18, loadT:-18,      // -100..100 (sign = direction, |v| = torque used)
-    curve:0.06, curveT:0.06,  // road bend, +right
-    speed:64, speedT:64,
-    setspeed:65, limit:65,
-    dash:0
+    conf:92, confT:92, load:-18, loadT:-18, curve:0.06, curveT:0.06,
+    speed:64, speedT:64, setspeed:65, limit:65, dash:0,
+    view:'abstract', sound:false
   };
+  const lerp=(a,b,t)=>a+(b-a)*t;
 
-  function lerp(a,b,t){return a+(b-a)*t;}
-
-  // ---------- sizing ----------
+  // ---------- sizing + offscreen textures ----------
   let W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+  let grain=null;
+  function buildGrain(){
+    grain=document.createElement('canvas'); grain.width=256; grain.height=256;
+    const g=grain.getContext('2d'); const img=g.createImageData(256,256);
+    for(let i=0;i<img.data.length;i+=4){
+      const v=Math.random()*255; img.data[i]=img.data[i+1]=img.data[i+2]=v;
+      img.data[i+3]=Math.random()*18; // very faint
+    }
+    g.putImageData(img,0,0);
+  }
+  // persistent road speckles (for camera asphalt motion)
+  const speckles=[];
+  for(let i=0;i<70;i++) speckles.push({t:Math.random(), lat:(Math.random()*2-1)*0.9, s:Math.random()});
   function resize(){
-    const r=cv.getBoundingClientRect();
-    W=r.width; H=r.height;
-    cv.width=W*DPR; cv.height=H*DPR;
-    ctx.setTransform(DPR,0,0,DPR,0,0);
+    const r=cv.getBoundingClientRect(); W=r.width; H=r.height;
+    cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+    if(!grain) buildGrain();
   }
   window.addEventListener('resize',resize);
 
-  // road geometry: t=0 near/bottom, t=1 far/horizon
-  const HORIZON=0.30;                 // fraction of height where road meets sky
-  function roadY(t){ return H - t*H*(1-HORIZON); }
-  function centerX(t){ return W/2 + S.curve * W * (t*t) * 0.9; }
-  function roadHalf(t){ return lerp(W*0.46, W*0.018, t); }   // full lane half-width
-  function pathHalf(t){ return roadHalf(t)*0.60; }           // driving corridor
+  const HORIZON=0.30;
+  const roadY=t=>H - t*H*(1-HORIZON);
+  const centerX=t=>W/2 + S.curve * W * (t*t) * 0.9;
+  const roadHalf=t=>lerp(W*0.46, W*0.018, t);
+  const pathHalf=t=>roadHalf(t)*0.60;
+  const blurF=()=>Math.max(0,Math.min(1,(S.speed-28)/62)); // motion-blur amount
 
-  // ---------- scene paint ----------
-  function paintScene(){
-    // sky
+  // ---------- ABSTRACT scene ----------
+  function paintAbstract(){
     const hy=H*HORIZON;
     let sky=ctx.createLinearGradient(0,0,0,hy);
     sky.addColorStop(0,'#0a1a26'); sky.addColorStop(1,'#123243');
     ctx.fillStyle=sky; ctx.fillRect(0,0,W,hy);
-    // haze band
     let haze=ctx.createLinearGradient(0,hy-40,0,hy+30);
-    haze.addColorStop(0,'rgba(120,170,190,0)');
-    haze.addColorStop(1,'rgba(150,190,205,.18)');
+    haze.addColorStop(0,'rgba(120,170,190,0)'); haze.addColorStop(1,'rgba(150,190,205,.18)');
     ctx.fillStyle=haze; ctx.fillRect(0,hy-40,W,70);
-    // ground
     ctx.fillStyle='#0b1116'; ctx.fillRect(0,hy,W,H-hy);
+    paintAsphalt('#20272d','#2b333a');
+    paintLanes('rgba(220,230,235,.55)','rgba(230,238,240,.5)');
+  }
 
+  // ---------- CAMERA scene ----------
+  function paintCamera(){
+    const hy=H*HORIZON;
+    // sky
+    let sky=ctx.createLinearGradient(0,0,0,hy+20);
+    sky.addColorStop(0,'#7fa6c4'); sky.addColorStop(.6,'#a9c4d6'); sky.addColorStop(1,'#d7e2e6');
+    ctx.fillStyle=sky; ctx.fillRect(0,0,W,hy+20);
+    // sun glow
+    let sun=ctx.createRadialGradient(W*0.68,hy*0.35,4,W*0.68,hy*0.35,H*0.5);
+    sun.addColorStop(0,'rgba(255,247,224,.55)'); sun.addColorStop(1,'rgba(255,247,224,0)');
+    ctx.fillStyle=sun; ctx.fillRect(0,0,W,hy+40);
+    // distant hills
+    ctx.fillStyle='#8ea8ac';
+    ctx.beginPath(); ctx.moveTo(0,hy);
+    for(let x=0;x<=W;x+=W/10){ ctx.lineTo(x, hy-14-10*Math.sin(x/W*6)); }
+    ctx.lineTo(W,hy); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#6f8e86';
+    ctx.beginPath(); ctx.moveTo(0,hy);
+    for(let x=0;x<=W;x+=W/8){ ctx.lineTo(x, hy-6-8*Math.cos(x/W*5+1)); }
+    ctx.lineTo(W,hy); ctx.closePath(); ctx.fill();
+    // ground verge
+    let grd=ctx.createLinearGradient(0,hy,0,H);
+    grd.addColorStop(0,'#5c6a4e'); grd.addColorStop(1,'#3a4436');
+    ctx.fillStyle=grd; ctx.fillRect(0,hy,W,H-hy);
     // asphalt
+    paintAsphalt('#33393f','#4b535a');
+    // moving asphalt speckles
+    const bl=blurF();
+    for(const p of speckles){
+      let t=(p.t + S.dash*1.4) % 1; const y=roadY(t); const hw=roadHalf(t);
+      const x=centerX(t)+p.lat*hw*0.85; const sz=Math.max(0.6,(1-t)*3*(0.5+p.s));
+      ctx.fillStyle=`rgba(${p.s>0.5?'20,24,28':'120,128,134'},${(1-t)*0.5})`;
+      ctx.fillRect(x, y, sz, sz*(1+bl*4));
+    }
+    paintLanes('rgba(245,245,240,.85)','rgba(245,222,120,.85)'); // white edges, warm dashes
+  }
+
+  function paintAsphalt(cFar,cNear){
     ctx.beginPath();
     ctx.moveTo(centerX(0)-roadHalf(0),roadY(0));
     ctx.lineTo(centerX(1)-roadHalf(1),roadY(1));
@@ -246,72 +310,55 @@
     ctx.lineTo(centerX(0)+roadHalf(0),roadY(0));
     ctx.closePath();
     let asp=ctx.createLinearGradient(0,roadY(1),0,roadY(0));
-    asp.addColorStop(0,'#20272d'); asp.addColorStop(1,'#2b333a');
+    asp.addColorStop(0,cFar); asp.addColorStop(1,cNear);
     ctx.fillStyle=asp; ctx.fill();
-
-    // lane edge lines (solid)
+  }
+  function paintLanes(edgeCol,dashCol){
     for(const s of [-1,1]){
       ctx.beginPath();
-      for(let i=0;i<=40;i++){const t=i/40; const x=centerX(t)+s*roadHalf(t)*0.96; const y=roadY(t);
-        i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
-      ctx.strokeStyle='rgba(220,230,235,.55)'; ctx.lineWidth=Math.max(1,W*0.004); ctx.stroke();
+      for(let i=0;i<=40;i++){const t=i/40;const x=centerX(t)+s*roadHalf(t)*0.96;i?ctx.lineTo(x,roadY(t)):ctx.moveTo(x,roadY(t));}
+      ctx.strokeStyle=edgeCol; ctx.lineWidth=Math.max(1,W*0.004); ctx.stroke();
     }
-    // dashed center
-    ctx.strokeStyle='rgba(230,238,240,.5)';
+    const bl=blurF(); const dashLen=0.02*(1+bl*1.6);
+    ctx.strokeStyle=dashCol;
     for(let i=0;i<26;i++){
-      const t0=((i/26)+ S.dash)%1, t1=t0+0.02;
-      if(t1>1) continue;
-      ctx.beginPath();
-      ctx.moveTo(centerX(t0),roadY(t0)); ctx.lineTo(centerX(t1),roadY(t1));
+      const t0=((i/26)+S.dash)%1, t1=t0+dashLen; if(t1>1) continue;
+      ctx.beginPath(); ctx.moveTo(centerX(t0),roadY(t0)); ctx.lineTo(centerX(t1),roadY(t1));
       ctx.lineWidth=Math.max(1,lerp(W*0.012,W*0.001,t0)); ctx.stroke();
     }
   }
 
   // ---------- the living path ----------
   function paintPath(){
-    const conf=S.conf/100;
-    const reach = 0.16 + 0.80*conf;           // solid ribbon extent
-    const fade  = Math.min(reach+0.26, 0.99);  // stipple dissolve extent
-    const loadMag=Math.abs(S.load)/100;
-    const loadDir=Math.sign(S.load)||1;
+    const conf=S.conf/100, reach=0.16+0.80*conf, fade=Math.min(reach+0.26,0.99);
+    const loadMag=Math.abs(S.load)/100, loadDir=Math.sign(S.load)||1;
 
-    // --- solid ribbon (near -> reach) ---
     ctx.beginPath();
-    for(let i=0;i<=40;i++){const t=reach*i/40;const x=centerX(t)-pathHalf(t);ctx.lineTo(x,roadY(t));}
-    for(let i=40;i>=0;i--){const t=reach*i/40;const x=centerX(t)+pathHalf(t);ctx.lineTo(x,roadY(t));}
+    for(let i=0;i<=40;i++){const t=reach*i/40;ctx.lineTo(centerX(t)-pathHalf(t),roadY(t));}
+    for(let i=40;i>=0;i--){const t=reach*i/40;ctx.lineTo(centerX(t)+pathHalf(t),roadY(t));}
     ctx.closePath();
     let g=ctx.createLinearGradient(0,roadY(reach),0,roadY(0));
-    g.addColorStop(0,'rgba(47,224,122,.10)');
-    g.addColorStop(1,'rgba(47,224,122,.42)');
+    g.addColorStop(0,'rgba(47,224,122,.10)'); g.addColorStop(1,'rgba(47,224,122,.44)');
     ctx.fillStyle=g; ctx.fill();
 
-    // core guide line
     ctx.beginPath();
     for(let i=0;i<=40;i++){const t=reach*i/40;const x=centerX(t);i?ctx.lineTo(x,roadY(t)):ctx.moveTo(x,roadY(t));}
-    ctx.strokeStyle='rgba(120,255,180,.85)'; ctx.lineWidth=Math.max(1.5,W*0.006);
+    ctx.strokeStyle='rgba(120,255,180,.9)'; ctx.lineWidth=Math.max(1.5,W*0.006);
     ctx.shadowColor='rgba(47,224,122,.6)'; ctx.shadowBlur=12; ctx.stroke(); ctx.shadowBlur=0;
 
-    // --- dissolve (reach -> fade): stipple that thins with distance ---
     const steps=46;
     for(let i=0;i<steps;i++){
-      const t=lerp(reach,fade,i/steps);
-      const localFrac=i/steps;                 // 0 at reach, 1 at fade
+      const t=lerp(reach,fade,i/steps), localFrac=i/steps;
       const alpha=(1-localFrac)*0.5*(0.5+0.5*conf);
-      // dithered: dashes thin out further ahead, drifting slowly so it reads as the
-      // path failing to resolve rather than random static
-      const seed=Math.sin(i*12.9898)*43758.5453; const r=seed-Math.floor(seed);
+      const seed=Math.sin(i*12.9898)*43758.5453, r=seed-Math.floor(seed);
       const phase=(r + (reduce?0:Date.now()/2600))%1;
       if(phase > (1-localFrac)*0.9+0.08) continue;
       const hw=pathHalf(t);
-      ctx.beginPath();
-      ctx.moveTo(centerX(t)-hw*0.9,roadY(t));
-      ctx.lineTo(centerX(t)+hw*0.9,roadY(t));
+      ctx.beginPath(); ctx.moveTo(centerX(t)-hw*0.9,roadY(t)); ctx.lineTo(centerX(t)+hw*0.9,roadY(t));
       ctx.strokeStyle=`rgba(47,224,122,${alpha.toFixed(3)})`;
-      ctx.lineWidth=Math.max(1,lerp(W*0.012,W*0.002,t));
-      ctx.stroke();
+      ctx.lineWidth=Math.max(1,lerp(W*0.012,W*0.002,t)); ctx.stroke();
     }
 
-    // --- edge strain (directional) ---
     if(loadMag>0.05){
       const strainCol = loadMag>0.94?'255,68,56' : loadMag>0.8?'255,176,32' : '120,255,180';
       const pulse = loadMag>0.8 ? (0.55+0.45*Math.sin(Date.now()/220)) : 1;
@@ -323,103 +370,143 @@
     }
   }
 
-  // ---------- chrome that reacts ----------
+  // camera post: grain + vignette (drawn over everything)
+  function paintCameraPost(){
+    if(grain){
+      ctx.globalAlpha=0.5;
+      const ox=Math.random()*40, oy=Math.random()*40;
+      for(let x=-ox;x<W;x+=256) for(let y=-oy;y<H;y+=256) ctx.drawImage(grain,x,y);
+      ctx.globalAlpha=1;
+    }
+    let vig=ctx.createRadialGradient(W/2,H*0.52,H*0.2,W/2,H*0.52,H*0.85);
+    vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(0,0,0,.42)');
+    ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
+  }
+
+  // ---------- chrome ----------
   const el={speed:document.getElementById('speed'),setspeed:document.getElementById('setspeed'),
     limit:document.getElementById('limit'),wheel:document.getElementById('wheel'),
-    dm:document.getElementById('dm'),status:document.getElementById('status'),
-    periph:document.getElementById('periph')};
+    dm:document.getElementById('dm'),status:document.getElementById('status'),periph:document.getElementById('periph')};
 
   function wheelSVG(load){
-    const mag=Math.abs(load)/100;
-    const col = mag>0.94?'#FF4438':mag>0.8?'#FFB020':'#F2F5F7';
-    // effort arc sweeps from top, direction = sign
-    const R=20, C=2*Math.PI*R, sweep=C*Math.min(mag,1)*0.5;
-    const rot = load<0 ? -90-(sweep/C*360) : -90;
+    const mag=Math.abs(load)/100, col=mag>0.94?'#FF4438':mag>0.8?'#FFB020':'#F2F5F7';
+    const R=20,C=2*Math.PI*R,sweep=C*Math.min(mag,1)*0.5, rot=load<0?-90-(sweep/C*360):-90;
     return `<svg viewBox="0 0 52 52">
       <circle cx="26" cy="26" r="24" fill="rgba(8,11,15,.7)" stroke="#1B242D"/>
       <circle cx="26" cy="26" r="${R}" fill="none" stroke="#22303a" stroke-width="3"/>
-      <circle cx="26" cy="26" r="${R}" fill="none" stroke="${col}" stroke-width="3"
-        stroke-linecap="round" stroke-dasharray="${sweep} ${C}"
-        transform="rotate(${rot} 26 26)"/>
+      <circle cx="26" cy="26" r="${R}" fill="none" stroke="${col}" stroke-width="3" stroke-linecap="round"
+        stroke-dasharray="${sweep} ${C}" transform="rotate(${rot} 26 26)"/>
       <g stroke="${col}" stroke-width="2.4" fill="none" opacity=".95">
-        <circle cx="26" cy="26" r="6.5"/>
-        <line x1="26" y1="19.5" x2="26" y2="10"/>
-        <line x1="20.3" y1="29.2" x2="12" y2="34"/>
-        <line x1="31.7" y1="29.2" x2="40" y2="34"/>
-      </g></svg>`;
+        <circle cx="26" cy="26" r="6.5"/><line x1="26" y1="19.5" x2="26" y2="10"/>
+        <line x1="20.3" y1="29.2" x2="12" y2="34"/><line x1="31.7" y1="29.2" x2="40" y2="34"/></g></svg>`;
   }
-  function dmSVG(){ // openpilot's existing green attention arc — kept, deliberately not reused for confidence
-    return `<svg viewBox="0 0 52 52">
+  el.dm.innerHTML=`<svg viewBox="0 0 52 52">
       <circle cx="26" cy="26" r="24" fill="rgba(8,11,15,.7)" stroke="#1B242D"/>
       <path d="M26 12 a14 14 0 0 1 12.1 7" fill="none" stroke="#2FE07A" stroke-width="3" stroke-linecap="round"/>
       <circle cx="26" cy="24" r="4.4" fill="none" stroke="#cfe9d8" stroke-width="2.2"/>
-      <path d="M18 37 q8 -8 16 0" fill="none" stroke="#cfe9d8" stroke-width="2.2" stroke-linecap="round"/>
-    </svg>`;
-  }
-  el.dm.innerHTML=dmSVG();
+      <path d="M18 37 q8 -8 16 0" fill="none" stroke="#cfe9d8" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
+  let level='ok';
   function updateChrome(){
     el.speed.textContent=Math.round(S.speed);
     el.setspeed.textContent=Math.round(S.setspeed);
     el.limit.textContent=Math.round(S.limit);
     el.wheel.innerHTML=wheelSVG(S.load);
-
-    // status word + peripheral escalation, driven by confidence & strain
     const c=S.conf, mag=Math.abs(S.load)/100;
-    let word='engaged', dot='var(--go)', glow='transparent', show=false, border='var(--stroke)';
-    if(mag>0.94){ word='hold the wheel — at steering limit'; dot='var(--crit)'; show=true; border='rgba(255,68,56,.6)'; }
-    else if(c<24){ word='take the wheel — low confidence ahead'; dot='var(--crit)'; glow='inset 0 0 90px rgba(255,68,56,.28)'; show=true; border='rgba(255,68,56,.55)'; }
-    else if(mag>0.8){ word='sharp curve — stay ready'; dot='var(--warn)'; show=true; border='rgba(255,176,32,.5)'; }
-    else if(c<48){ word='uncertain road — stay ready'; dot='var(--warn)'; glow='inset 0 0 70px rgba(255,176,32,.14)'; show=true; border='rgba(255,176,32,.4)'; }
+    let word='engaged',dot='var(--go)',glow='transparent',show=false,border='var(--stroke)';
+    if(mag>0.94){ level='limit'; word='hold the wheel — at steering limit'; dot='var(--crit)'; show=true; border='rgba(255,68,56,.6)'; }
+    else if(c<24){ level='red'; word='take the wheel — low confidence ahead'; dot='var(--crit)'; glow='inset 0 0 90px rgba(255,68,56,.28)'; show=true; border='rgba(255,68,56,.55)'; }
+    else if(mag>0.8){ level='amber'; word='sharp curve — stay ready'; dot='var(--warn)'; show=true; border='rgba(255,176,32,.5)'; }
+    else if(c<48){ level='amber'; word='uncertain road — stay ready'; dot='var(--warn)'; glow='inset 0 0 70px rgba(255,176,32,.14)'; show=true; border='rgba(255,176,32,.4)'; }
+    else level='ok';
     el.status.querySelector('.dot').style.background=dot;
     el.status.querySelector('.txt').textContent=word;
-    el.status.style.borderColor=border;
-    el.status.classList.toggle('show',show);
+    el.status.style.borderColor=border; el.status.classList.toggle('show',show);
     el.periph.style.boxShadow=glow;
   }
 
+  // ---------- audio (synth, reserved) ----------
+  let actx=null, prevLevel='ok', lastPulse=0;
+  function ensureAudio(){ if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } if(actx&&actx.state==='suspended') actx.resume(); }
+  function tone(freq,dur,o){ if(!actx)return; o=o||{}; const t0=actx.currentTime+(o.delay||0);
+    const osc=actx.createOscillator(), g=actx.createGain(); osc.type=o.type||'sine'; osc.frequency.value=freq;
+    osc.connect(g); g.connect(actx.destination); const peak=o.gain||0.05;
+    g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(peak,t0+(o.attack||0.02));
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); osc.start(t0); osc.stop(t0+dur+0.05); }
+  const earcon={
+    amber(){ tone(560,0.16,{gain:.03}); },
+    handoff(){ tone(523,0.5,{gain:.05}); tone(392,0.6,{delay:.28,gain:.05}); },   // gentle descending
+    limit(){ tone(300,0.34,{type:'triangle',gain:.055}); },
+    recover(){ tone(392,.2,{gain:.04}); tone(523,.28,{delay:.16,gain:.045}); }    // ascending reassurance
+  };
+  function audioTick(now){
+    if(!S.sound){ prevLevel=level; return; }
+    if(level!==prevLevel){
+      if(level==='amber'&&(prevLevel==='ok')) earcon.amber();
+      else if(level==='red') earcon.handoff();
+      else if(level==='limit') earcon.limit();
+      else if(level==='ok'&&(prevLevel==='red'||prevLevel==='limit')) earcon.recover();
+      lastPulse=now; prevLevel=level;
+    }
+    // sustained, slow, non-naggy repeats while critical
+    if(level==='red'&&now-lastPulse>1600){ earcon.handoff(); lastPulse=now; }
+    if(level==='limit'&&now-lastPulse>900){ earcon.limit(); lastPulse=now; }
+  }
+
   // ---------- loop ----------
-  function frame(){
+  function frame(now){
     const k=reduce?1:0.09;
     S.conf=lerp(S.conf,S.confT,k); S.load=lerp(S.load,S.loadT,k);
     S.curve=lerp(S.curve,S.curveT,k); S.speed=lerp(S.speed,S.speedT,k);
-    if(!reduce){ S.dash=(S.dash+ (0.0018+S.speed*0.00004))%1; }
-    paintScene(); paintPath(); updateChrome();
+    if(!reduce) S.dash=(S.dash+(0.0018+S.speed*0.00004))%1;
+    if(S.view==='camera'){ paintCamera(); paintPath(); paintCameraPost(); }
+    else { paintAbstract(); paintPath(); }
+    updateChrome(); audioTick(now||0);
     requestAnimationFrame(frame);
   }
 
   // ---------- controls ----------
   const confI=document.getElementById('conf'), loadI=document.getElementById('load');
   const confV=document.getElementById('confVal'), loadV=document.getElementById('loadVal');
-  function syncLabels(){
-    confV.textContent=Math.round(S.confT)+'%';
-    const l=Math.round(S.loadT);
-    loadV.textContent=l===0?'centered':Math.abs(l)+'% '+(l<0?'left':'right');
-  }
-  confI.addEventListener('input',e=>{S.confT=+e.target.value;clearActive();syncLabels();});
-  loadI.addEventListener('input',e=>{S.loadT=+e.target.value;clearActive();syncLabels();});
+  function syncLabels(){ confV.textContent=Math.round(S.confT)+'%';
+    const l=Math.round(S.loadT); loadV.textContent=l===0?'centered':Math.abs(l)+'% '+(l<0?'left':'right'); }
+  confI.addEventListener('input',e=>{ensureAudio();S.confT=+e.target.value;clearActive();syncLabels();});
+  loadI.addEventListener('input',e=>{ensureAudio();S.loadT=+e.target.value;clearActive();syncLabels();});
 
   const SCEN=[
-    {n:'Open highway',    conf:94, load:12,  curve:0.05, speed:64, set:65, limit:65},
-    {n:'Faded markings',  conf:46, load:16,  curve:0.10, speed:41, set:45, limit:45},
-    {n:'Sharp off-ramp',  conf:72, load:90,  curve:0.34, speed:33, set:40, limit:40},
-    {n:'Crosswind gust',  conf:60, load:70,  curve:0.08, speed:58, set:60, limit:60},
-    {n:'Low-sun glare',   conf:18, load:24,  curve:0.06, speed:44, set:50, limit:50},
-    {n:'Construction zone',conf:34,load:40,  curve:0.14, speed:28, set:35, limit:35},
+    {n:'Open highway',    conf:94, load:12, curve:0.05, speed:64, set:65, limit:65},
+    {n:'Faded markings',  conf:46, load:16, curve:0.10, speed:41, set:45, limit:45},
+    {n:'Sharp off-ramp',  conf:72, load:90, curve:0.34, speed:33, set:40, limit:40},
+    {n:'Crosswind gust',  conf:60, load:70, curve:0.08, speed:58, set:60, limit:60},
+    {n:'Low-sun glare',   conf:18, load:24, curve:0.06, speed:44, set:50, limit:50},
+    {n:'Construction zone',conf:34,load:40, curve:0.14, speed:28, set:35, limit:35},
   ];
   const scEl=document.getElementById('scenarios');
   function clearActive(){[...scEl.children].forEach(c=>c.classList.remove('active'));}
   SCEN.forEach((s,i)=>{
     const b=document.createElement('button'); b.className='chip'; b.textContent=s.n;
-    b.addEventListener('click',()=>{
-      clearActive(); b.classList.add('active');
-      S.confT=s.conf; S.loadT=s.load; S.curveT=s.curve; S.speedT=s.speed;
-      S.setspeed=s.set; S.limit=s.limit;
-      confI.value=s.conf; loadI.value=s.load; syncLabels();
-    });
-    if(i===0) b.classList.add('active');
-    scEl.appendChild(b);
+    b.addEventListener('click',()=>{ ensureAudio(); clearActive(); b.classList.add('active');
+      S.confT=s.conf; S.loadT=s.load; S.curveT=s.curve; S.speedT=s.speed; S.setspeed=s.set; S.limit=s.limit;
+      confI.value=s.conf; loadI.value=s.load; syncLabels(); });
+    if(i===0) b.classList.add('active'); scEl.appendChild(b);
   });
+
+  // view toggle
+  const viewSeg=document.getElementById('viewSeg');
+  viewSeg.addEventListener('click',e=>{ const btn=e.target.closest('button'); if(!btn)return;
+    [...viewSeg.children].forEach(c=>c.classList.remove('active')); btn.classList.add('active');
+    S.view=btn.dataset.view; });
+
+  // sound toggle
+  const soundBtn=document.getElementById('soundBtn'), soundLabel=document.getElementById('soundLabel'),
+        soundIcon=document.getElementById('soundIcon');
+  soundBtn.addEventListener('click',()=>{ S.sound=!S.sound; ensureAudio();
+    soundBtn.classList.toggle('on',S.sound); soundBtn.setAttribute('aria-pressed',S.sound);
+    soundLabel.textContent=S.sound?'Sound on':'Sound off';
+    soundIcon.innerHTML = S.sound
+      ? '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>'
+      : '<path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>';
+    if(S.sound) earcon.recover(); });
 
   resize(); syncLabels(); requestAnimationFrame(frame);
 })();
