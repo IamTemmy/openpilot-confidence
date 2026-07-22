@@ -227,7 +227,7 @@
   const S = {
     conf:92, confT:92, load:-18, loadT:-18, curve:0.06, curveT:0.06,
     speed:64, speedT:64, setspeed:65, limit:65, dash:0,
-    lon:8, lonT:8, lead:0.7,   // longitudinal effort (-brake..+accel), lead position 0..1 or null
+    lon:8, lonT:8, lead:0.5,   // longitudinal effort (-brake..+accel), lead position 0..1 or null
     view:'abstract', sound:false
   };
   const lerp=(a,b,t)=>a+(b-a)*t;
@@ -381,55 +381,65 @@
     }
   }
 
+  // rounded-rect helper
+  function rr(x,y,w,h,r){
+    if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(x,y,w,h,r); return; }
+    ctx.beginPath(); ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  }
+  // lead vehicle glyph — brake lights glow as openpilot brakes toward it
+  function drawLead(t, brakeGlow){
+    const y=roadY(t), x=centerX(t), w=Math.max(20,pathHalf(t)*1.15), h=w*0.5, top=y-h, r=Math.min(9,h*0.3);
+    ctx.save();
+    ctx.fillStyle='rgba(0,0,0,.4)'; ctx.beginPath(); ctx.ellipse(x,y+2,w*0.55,h*0.18,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#12171c'; ctx.strokeStyle='rgba(195,210,220,.55)'; ctx.lineWidth=Math.max(1,w*0.03);
+    rr(x-w/2,top,w,h,r); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='rgba(120,150,170,.22)'; rr(x-w*0.36,top+h*0.13,w*0.72,h*0.4,r*0.6); ctx.fill();
+    const lit=brakeGlow;
+    ctx.shadowColor=`rgba(255,50,36,${(0.75*lit).toFixed(2)})`; ctx.shadowBlur=13*lit;
+    ctx.fillStyle=`rgba(255,${Math.round(74-30*lit)},${Math.round(58-38*lit)},${(0.5+0.5*lit).toFixed(2)})`;
+    rr(x-w*0.44,top+h*0.55,w*0.17,h*0.26,r*0.4); ctx.fill();
+    rr(x+w*0.27,top+h*0.55,w*0.17,h*0.26,r*0.4); ctx.fill();
+    ctx.restore();
+  }
+
   // ---------- longitudinal: lead car + brake/accel strain ----------
   function paintLongitudinal(reach){
     const lonMag=Math.abs(S.lon)/100, braking=S.lon<0, leadT=S.lead;
+    let brakeStrength=0;
 
-    // braking strain band — grows back from the lead (or a near-field slow-zone) as braking nears its limit
+    // braking — clear "brake rungs" lighting up from the lead (or near slow-zone) back toward you
     if(braking && lonMag>0.24){
-      const strength=Math.min(1,(lonMag-0.24)/0.76);
-      const col = strength>0.8?'255,68,56' : strength>0.5?'255,120,40' : '255,176,32';
-      const pulse = strength>0.8?(0.6+0.4*Math.sin(Date.now()/200)):1;
-      const anchor = (leadT!=null)? leadT : 0.34;              // brake toward the lead, else a near slow-zone
-      const tNear=Math.max(0.04, anchor*(1-strength*0.85));
-      ctx.beginPath();
-      for(let i=0;i<=30;i++){const t=lerp(tNear,anchor,i/30);ctx.lineTo(centerX(t)-pathHalf(t),roadY(t));}
-      for(let i=30;i>=0;i--){const t=lerp(tNear,anchor,i/30);ctx.lineTo(centerX(t)+pathHalf(t),roadY(t));}
-      ctx.closePath();
-      ctx.fillStyle=`rgba(${col},${((0.16+0.34*strength)*pulse).toFixed(3)})`; ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(centerX(anchor)-pathHalf(anchor),roadY(anchor));
-      ctx.lineTo(centerX(anchor)+pathHalf(anchor),roadY(anchor));
-      ctx.strokeStyle=`rgba(${col},${(0.75*pulse).toFixed(3)})`; ctx.lineWidth=Math.max(2,W*0.006);
-      ctx.shadowColor=`rgba(${col},.7)`; ctx.shadowBlur=8+10*strength; ctx.stroke(); ctx.shadowBlur=0;
+      brakeStrength=Math.min(1,(lonMag-0.24)/0.76);
+      const anchor=(leadT!=null)?leadT:0.34, rungs=7, lit=Math.max(1,Math.round(rungs*brakeStrength));
+      const col=brakeStrength>0.8?'255,68,56':brakeStrength>0.5?'255,120,40':'255,176,32';
+      for(let i=0;i<lit;i++){
+        const frac=i/(rungs-1), t=lerp(anchor,Math.max(0.05,anchor*0.22),frac);
+        const pulse=brakeStrength>0.8?(0.55+0.45*Math.sin(Date.now()/200 - i*0.5)):1;
+        const hw=pathHalf(t)*0.92, y=roadY(t), x=centerX(t);
+        ctx.beginPath(); ctx.moveTo(x-hw,y); ctx.lineTo(x+hw,y);
+        ctx.strokeStyle=`rgba(${col},${(0.85*pulse).toFixed(2)})`;
+        ctx.lineWidth=Math.max(2.5,lerp(W*0.017,W*0.004,t));
+        ctx.shadowColor=`rgba(${col},.6)`; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
+      }
     }
 
-    // acceleration surge — forward chevrons that brighten near the accel limit
+    // acceleration — forward surge chevrons that brighten near the accel limit
     if(!braking && lonMag>0.32){
       const strength=Math.min(1,(lonMag-0.32)/0.68), col=strength>0.85?'255,176,32':'150,255,190', n=5;
       for(let k=0;k<n;k++){
         const base=((k/n)+(S.dash*2.2))%1, t=0.06+base*Math.min(reach*0.9,0.55);
-        const y=roadY(t), x=centerX(t), hw=pathHalf(t)*0.62, dip=hw*0.6;
+        const y=roadY(t), x=centerX(t), hw=pathHalf(t)*0.66, dip=hw*0.62;
         ctx.beginPath();
         ctx.moveTo(x-hw,y+dip); ctx.lineTo(x,y-dip*0.35); ctx.lineTo(x+hw,y+dip);
-        ctx.strokeStyle=`rgba(${col},${((0.4+0.55*strength)*(1-base*0.7)).toFixed(3)})`;
-        ctx.lineWidth=Math.max(2,W*0.006*(1-base)+1.5);
-        ctx.shadowColor=`rgba(${col},.5)`; ctx.shadowBlur=6; ctx.stroke(); ctx.shadowBlur=0;
+        ctx.strokeStyle=`rgba(${col},${((0.5+0.5*strength)*(1-base*0.65)).toFixed(3)})`;
+        ctx.lineWidth=Math.max(2.5,W*0.007*(1-base)+1.5);
+        ctx.shadowColor=`rgba(${col},.5)`; ctx.shadowBlur=7; ctx.stroke(); ctx.shadowBlur=0;
       }
     }
 
-    // lead chevron marker
-    if(leadT!=null){
-      const t=leadT, y=roadY(t), x=centerX(t), sz=Math.max(6,(1-t)*34);
-      const strain=(braking&&lonMag>0.5)?(lonMag>0.8?'255,68,56':'255,120,40'):'230,240,245';
-      ctx.save();
-      ctx.strokeStyle=`rgba(${strain},.95)`; ctx.lineWidth=Math.max(2,sz*0.16);
-      ctx.lineJoin='round'; ctx.lineCap='round';
-      ctx.shadowColor=`rgba(${strain},.6)`; ctx.shadowBlur=8;
-      ctx.beginPath();
-      ctx.moveTo(x-sz*0.6, y-sz*1.15); ctx.lineTo(x, y-sz*0.55); ctx.lineTo(x+sz*0.6, y-sz*1.15);
-      ctx.stroke(); ctx.restore();
-    }
+    if(leadT!=null) drawLead(leadT, brakeStrength);
   }
 
   // camera post: grain + vignette (drawn over everything)
@@ -551,13 +561,13 @@
   lonI.addEventListener('input',e=>{ensureAudio();S.lonT=+e.target.value;clearActive();syncLabels();});
 
   const SCEN=[
-    {n:'Open highway',     conf:94, load:12, lon:8,   lead:0.72, curve:0.05, speed:64, set:65, limit:65},
+    {n:'Open highway',     conf:94, load:12, lon:8,   lead:0.58, curve:0.05, speed:64, set:65, limit:65},
     {n:'Faded markings',   conf:46, load:16, lon:0,   lead:null, curve:0.10, speed:41, set:45, limit:45},
     {n:'Sharp off-ramp',   conf:72, load:90, lon:-30, lead:null, curve:0.34, speed:33, set:40, limit:40},
-    {n:'Crosswind gust',   conf:60, load:70, lon:6,   lead:0.66, curve:0.08, speed:58, set:60, limit:60},
-    {n:'Low-sun glare',    conf:18, load:24, lon:-20, lead:0.55, curve:0.06, speed:44, set:50, limit:50},
-    {n:'Construction zone',conf:34, load:40, lon:-48, lead:0.46, curve:0.14, speed:28, set:35, limit:35},
-    {n:'Lead braking hard',conf:78, load:10, lon:-92, lead:0.34, curve:0.05, speed:40, set:45, limit:45},
+    {n:'Crosswind gust',   conf:60, load:70, lon:6,   lead:0.50, curve:0.08, speed:58, set:60, limit:60},
+    {n:'Low-sun glare',    conf:18, load:24, lon:-20, lead:0.46, curve:0.06, speed:44, set:50, limit:50},
+    {n:'Construction zone',conf:34, load:40, lon:-48, lead:0.40, curve:0.14, speed:28, set:35, limit:35},
+    {n:'Lead braking hard',conf:78, load:10, lon:-92, lead:0.30, curve:0.05, speed:40, set:45, limit:45},
     {n:'Merging on-ramp',  conf:70, load:35, lon:78,  lead:null, curve:0.12, speed:52, set:60, limit:60},
   ];
   const scEl=document.getElementById('scenarios');
