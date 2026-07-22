@@ -57,7 +57,8 @@
   .device{position:relative;width:100%;aspect-ratio:2.16 / 1;border-radius:20px;
     overflow:hidden;background:#000;box-shadow:0 24px 70px -20px rgba(0,0,0,.8),0 0 0 1px #12181f;display:flex;}
   .stage{position:relative;flex:1 1 auto;min-width:0;height:100%;overflow:hidden;}
-  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;}
+  .realvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0;background:#000;}
   .nav{flex:0 0 auto;width:0;height:100%;overflow:hidden;background:#0a0e12;
     transition:width .4s ease;display:flex;flex-direction:column;}
   .device.nav-on .nav{width:38%;border-left:1px solid #12181f;}
@@ -144,6 +145,7 @@
 
   .foot{width:100%;max-width:1040px;font-size:12px;color:var(--faint);line-height:1.6;}
   .foot b{color:var(--muted);font-weight:600;}
+  .foot a{color:var(--muted);}
 
   /* ---------- driver-attention before/after ---------- */
   .attn{width:100%;max-width:1040px;background:var(--panel);border:1px solid var(--stroke);
@@ -199,6 +201,7 @@
     <div class="seg" id="viewSeg">
       <button data-view="abstract" class="active">Abstract</button>
       <button data-view="camera">Camera</button>
+      <button data-view="real">Real drive</button>
     </div>
     <div class="tools-right">
       <button class="pill-btn" id="navBtn" aria-pressed="false">
@@ -215,6 +218,7 @@
   <div class="device-wrap">
     <div class="device" id="device">
       <div class="stage">
+        <video id="realvid" class="realvid" muted loop playsinline preload="auto"></video>
         <canvas id="road"></canvas>
         <div class="periph" id="periph"></div>
         <div class="hud">
@@ -323,8 +327,9 @@
 
   <div class="foot">
     <b>Note.</b> Independent concept for the comma design challenge — not affiliated with comma.ai.
-    The camera view is a stylized render, not real footage; the proposal is the interaction model
-    (living path, edge strain, reserved escalation) — which is designed to sit on the real camera feed unchanged.
+    "Abstract" and "Camera" backdrops are stylized renders; "Real drive" composites our live overlay onto a clip from comma's
+    MIT-licensed <a href="https://github.com/commaai/comma_video_compression_challenge">video compression challenge</a>.
+    The proposal is the interaction model — living path, edge strain, reserved escalation — designed to sit on the real camera feed unchanged.
   </div>
 
 <script>
@@ -366,9 +371,9 @@
     if(Math.abs(r.width-W)>0.5||Math.abs(r.height-H)>0.5) resize(); }
 
   const HORIZON=0.30;
-  const roadY=t=>H - t*H*(1-HORIZON);
-  const centerX=t=>W/2 + S.curve * W * (t*t) * 0.9;
-  const roadHalf=t=>lerp(W*0.46, W*0.018, t);
+  const roadY=t=>{ const hz=S.view==='real'?0.48:HORIZON; return H - t*H*(1-hz); };
+  const centerX=t=>W/2 + (S.view==='real'?0:S.curve) * W * (t*t) * 0.9;
+  const roadHalf=t=> S.view==='real' ? lerp(W*0.30, W*0.012, t) : lerp(W*0.46, W*0.018, t);
   const pathHalf=t=>roadHalf(t)*0.60;
   const reachOf=()=>0.16+0.80*(S.conf/100);
   const blurF=()=>Math.max(0,Math.min(1,(S.speed-28)/62)); // motion-blur amount
@@ -540,7 +545,7 @@
 
   // ---------- longitudinal: lead car + brake/accel strain ----------
   function paintLongitudinal(reach){
-    const lonMag=Math.abs(S.lon)/100, braking=S.lon<0, leadT=S.lead;
+    const lonMag=Math.abs(S.lon)/100, braking=S.lon<0, leadT=(S.view==='real'?null:S.lead);
     let brakeStrength=0;
 
     // braking — a red zone paints the road from you up to the lead, with bold rungs, brighter as braking nears its limit
@@ -684,14 +689,26 @@
   }
 
   // ---------- loop ----------
+  // draw the real-footage video frame onto the canvas (cover-fit), avoiding any layering issues
+  function drawVideoCover(v){
+    const vw=v.videoWidth, vh=v.videoHeight;
+    ctx.clearRect(0,0,W,H);
+    if(!vw||!vh||v.readyState<2) return;
+    const scale=Math.max(W/vw, H/vh), dw=vw*scale, dh=vh*scale;
+    ctx.drawImage(v,(W-dw)/2,(H-dh)/2,dw,dh);
+  }
+
   function frame(now){
     ensureSize();
     const k=reduce?1:0.09;
     S.conf=lerp(S.conf,S.confT,k); S.load=lerp(S.load,S.loadT,k); S.lon=lerp(S.lon,S.lonT,k);
     S.curve=lerp(S.curve,S.curveT,k); S.speed=lerp(S.speed,S.speedT,k);
     if(!reduce) S.dash=(S.dash+(0.0018+S.speed*0.00004))%1;
-    if(S.view==='camera'){ paintCamera(); paintPath(); paintLongitudinal(reachOf()); paintCameraPost(); }
-    else { paintAbstract(); paintPath(); paintLongitudinal(reachOf()); }
+    if(S.view==='camera'){ paintCamera(); paintPath(); paintLongitudinal(reachOf()); paintCameraPost(); viddbg.style.display='none'; }
+    else if(S.view==='real'){ drawVideoCover(realVid); paintPath(); paintLongitudinal(reachOf());
+      viddbg.style.display='block';
+      viddbg.textContent='vid rs='+realVid.readyState+' '+realVid.videoWidth+'x'+realVid.videoHeight+' paused='+realVid.paused+' err='+(realVid.error?realVid.error.code:0); }
+    else { paintAbstract(); paintPath(); paintLongitudinal(reachOf()); viddbg.style.display='none'; }
     updateChrome(); audioTick(now||0); paintAttn(now||0);
     requestAnimationFrame(frame);
   }
@@ -729,9 +746,25 @@
 
   // view toggle
   const viewSeg=document.getElementById('viewSeg');
+  const realVid=document.getElementById('realvid');
+  realVid.muted=true;
+  // GitHub Pages can serve the mp4 with a content-type the <video> element rejects (err=4).
+  // Fetch the bytes and re-wrap as a video/mp4 blob so the element always accepts it.
+  // Falls back to a direct src where fetch is unavailable (e.g. opened via file://).
+  fetch('assets/drive.mp4').then(r=>{ if(!r.ok) throw 0; return r.arrayBuffer(); }).then(buf=>{
+    realVid.src=URL.createObjectURL(new Blob([buf],{type:'video/mp4'}));
+    realVid.load(); realVid.play().catch(()=>{});
+  }).catch(()=>{ realVid.src='assets/drive.mp4'; realVid.load(); realVid.play().catch(()=>{}); });
+  const viddbg=document.createElement('div');
+  viddbg.style.cssText='position:absolute;right:8px;bottom:8px;z-index:8;font:600 10px ui-monospace,monospace;color:#7fffb0;background:rgba(0,0,0,.6);padding:3px 7px;border-radius:6px;display:none;pointer-events:none;';
+  document.querySelector('.stage').appendChild(viddbg);
+  realVid.addEventListener('error',()=>{ viddbg.dataset.err='1'; });
   viewSeg.addEventListener('click',e=>{ const btn=e.target.closest('button'); if(!btn)return;
     [...viewSeg.children].forEach(c=>c.classList.remove('active')); btn.classList.add('active');
-    S.view=btn.dataset.view; });
+    S.view=btn.dataset.view;
+    if(S.view==='real'){ realVid.muted=true; const p=realVid.play(); if(p&&p.catch)p.catch(()=>{}); }
+    else { realVid.pause(); }
+  });
 
   // sound toggle
   const soundBtn=document.getElementById('soundBtn'), soundLabel=document.getElementById('soundLabel'),
