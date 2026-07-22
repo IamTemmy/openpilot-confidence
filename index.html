@@ -645,7 +645,7 @@
     if(!reduce) S.dash=(S.dash+(0.0018+S.speed*0.00004))%1;
     if(S.view==='camera'){ paintCamera(); paintPath(); paintLongitudinal(reachOf()); paintCameraPost(); }
     else { paintAbstract(); paintPath(); paintLongitudinal(reachOf()); }
-    updateChrome(); audioTick(now||0);
+    updateChrome(); audioTick(now||0); paintAttn(now||0);
     requestAnimationFrame(frame);
   }
 
@@ -708,21 +708,36 @@
   const attnI=document.getElementById('attn'), attnV=document.getElementById('attnVal');
   const shoutEl=document.getElementById('shout'), afterGlow=document.getElementById('afterGlow'), nudgeEl=document.getElementById('nudge');
   const dmBefore=document.getElementById('dmBefore'), dmAfter=document.getElementById('dmAfter');
-  function renderAttn(v){
+  let attnCur=0, _dmA='', _dmB='', _nudge='', _shout=null;
+  function paintAttn(now){
+    const v=attnCur;
     attnV.textContent = v<25?'focused' : v<60?'glancing away' : 'looking away';
-    // BEFORE — 0.11.1 warms the icon, then it jumps straight to a full-screen shout
-    dmBefore.innerHTML=dmMini(v>40?'#FF7A1A':'#2FE07A');
-    shoutEl.classList.toggle('on', v>55);
-    // AFTER — earlier, gentler, graduated; never a full-screen takeover
-    let arc='#2FE07A', glow='inset 0 0 0 0 rgba(0,0,0,0)', showNudge=false, txt='eyes on the road';
-    if(v>=30 && v<62){ arc='#FFC24D'; glow='inset 0 0 34px rgba(255,176,32,.16)'; showNudge=true; }
-    else if(v>=62){ arc='#FFB020'; glow='inset 0 0 48px rgba(255,176,32,.30)'; showNudge=true; txt='take the wheel — look ahead'; }
-    dmAfter.innerHTML=dmMini(arc);
-    afterGlow.style.boxShadow=glow;
-    nudgeEl.textContent=txt; nudgeEl.classList.toggle('on',showNudge);
+    // BEFORE — 0.11.1 warms the icon, then jumps straight to a full-screen shout that covers the road
+    const dmBcol=v>40?'#FF7A1A':'#2FE07A';
+    if(dmBcol!==_dmB){ dmBefore.innerHTML=dmMini(dmBcol); _dmB=dmBcol; }
+    const shoutOn=v>55;
+    if(shoutOn!==_shout){ shoutEl.classList.toggle('on',shoutOn); _shout=shoutOn; }
+    // AFTER — continuous escalation: subtle nudge -> urgent red peripheral flood, road never covered
+    if(v<28){
+      afterGlow.style.boxShadow='inset 0 0 0 0 rgba(0,0,0,0)';
+      if(_dmA!=='#2FE07A'){ dmAfter.innerHTML=dmMini('#2FE07A'); _dmA='#2FE07A'; }
+      if(_nudge!==''){ nudgeEl.classList.remove('on'); _nudge=''; }
+    } else {
+      const tt=(v-28)/72;                                  // 0..1 severity
+      const warm=tt<0.55;
+      const cr=warm?'255,176,32':'255,68,56';
+      const dmcol=warm?'#FFB020':'#FF4438';
+      const pulseAmt = tt>0.4 ? (0.5+0.5*Math.sin(now/(1200-820*tt)*Math.PI*2)) : 0; // faster & deeper with severity
+      const spread=(26+72*tt)*(0.82+0.4*pulseAmt);
+      const alpha=(0.13+0.44*tt)*(0.72+0.5*pulseAmt);
+      afterGlow.style.boxShadow=`inset 0 0 ${spread.toFixed(0)}px rgba(${cr},${Math.min(alpha,0.9).toFixed(2)})`;
+      if(dmcol!==_dmA){ dmAfter.innerHTML=dmMini(dmcol); _dmA=dmcol; }
+      const txt = tt<0.55?'eyes on the road' : tt<0.82?'hands on the wheel' : 'take the wheel now';
+      if(_nudge!==txt){ nudgeEl.textContent=txt; nudgeEl.classList.add('on'); _nudge=txt; }
+      nudgeEl.style.borderColor = warm?'rgba(255,176,32,.5)':'rgba(255,68,56,.65)';
+    }
   }
-  attnI.addEventListener('input',e=>renderAttn(+e.target.value));
-  renderAttn(0);
+  attnI.addEventListener('input',e=>{attnCur=+e.target.value;});
 
   resize(); syncLabels(); requestAnimationFrame(frame);
 })();
