@@ -385,34 +385,36 @@
   function paintLongitudinal(reach){
     const lonMag=Math.abs(S.lon)/100, braking=S.lon<0, leadT=S.lead;
 
-    // braking strain band — grows back from the lead as braking nears its limit
-    if(braking && lonMag>0.28 && leadT!=null){
-      const strength=(lonMag-0.28)/0.72;
+    // braking strain band — grows back from the lead (or a near-field slow-zone) as braking nears its limit
+    if(braking && lonMag>0.24){
+      const strength=Math.min(1,(lonMag-0.24)/0.76);
       const col = strength>0.8?'255,68,56' : strength>0.5?'255,120,40' : '255,176,32';
       const pulse = strength>0.8?(0.6+0.4*Math.sin(Date.now()/200)):1;
-      const tLead=leadT, tNear=Math.max(0.04, leadT*(1-strength*0.8));
+      const anchor = (leadT!=null)? leadT : 0.34;              // brake toward the lead, else a near slow-zone
+      const tNear=Math.max(0.04, anchor*(1-strength*0.85));
       ctx.beginPath();
-      for(let i=0;i<=30;i++){const t=lerp(tNear,tLead,i/30);ctx.lineTo(centerX(t)-pathHalf(t),roadY(t));}
-      for(let i=30;i>=0;i--){const t=lerp(tNear,tLead,i/30);ctx.lineTo(centerX(t)+pathHalf(t),roadY(t));}
+      for(let i=0;i<=30;i++){const t=lerp(tNear,anchor,i/30);ctx.lineTo(centerX(t)-pathHalf(t),roadY(t));}
+      for(let i=30;i>=0;i--){const t=lerp(tNear,anchor,i/30);ctx.lineTo(centerX(t)+pathHalf(t),roadY(t));}
       ctx.closePath();
       ctx.fillStyle=`rgba(${col},${((0.16+0.34*strength)*pulse).toFixed(3)})`; ctx.fill();
       ctx.beginPath();
-      ctx.moveTo(centerX(tLead)-pathHalf(tLead),roadY(tLead));
-      ctx.lineTo(centerX(tLead)+pathHalf(tLead),roadY(tLead));
+      ctx.moveTo(centerX(anchor)-pathHalf(anchor),roadY(anchor));
+      ctx.lineTo(centerX(anchor)+pathHalf(anchor),roadY(anchor));
       ctx.strokeStyle=`rgba(${col},${(0.75*pulse).toFixed(3)})`; ctx.lineWidth=Math.max(2,W*0.006);
       ctx.shadowColor=`rgba(${col},.7)`; ctx.shadowBlur=8+10*strength; ctx.stroke(); ctx.shadowBlur=0;
     }
 
     // acceleration surge — forward chevrons that brighten near the accel limit
-    if(!braking && lonMag>0.4){
-      const strength=(lonMag-0.4)/0.6, col=strength>0.85?'255,176,32':'120,255,180', n=4;
+    if(!braking && lonMag>0.32){
+      const strength=Math.min(1,(lonMag-0.32)/0.68), col=strength>0.85?'255,176,32':'150,255,190', n=5;
       for(let k=0;k<n;k++){
-        const base=((k/n)+(S.dash*2))%1, t=base*Math.min(reach,0.5);
-        const y=roadY(t), x=centerX(t), hw=pathHalf(t)*0.5, dip=hw*0.5;
+        const base=((k/n)+(S.dash*2.2))%1, t=0.06+base*Math.min(reach*0.9,0.55);
+        const y=roadY(t), x=centerX(t), hw=pathHalf(t)*0.62, dip=hw*0.6;
         ctx.beginPath();
-        ctx.moveTo(x-hw,y+dip); ctx.lineTo(x,y-dip*0.2); ctx.lineTo(x+hw,y+dip);
-        ctx.strokeStyle=`rgba(${col},${((0.3+0.5*strength)*(1-base)).toFixed(3)})`;
-        ctx.lineWidth=Math.max(1.5,W*0.004*(1-base)+1); ctx.stroke();
+        ctx.moveTo(x-hw,y+dip); ctx.lineTo(x,y-dip*0.35); ctx.lineTo(x+hw,y+dip);
+        ctx.strokeStyle=`rgba(${col},${((0.4+0.55*strength)*(1-base*0.7)).toFixed(3)})`;
+        ctx.lineWidth=Math.max(2,W*0.006*(1-base)+1.5);
+        ctx.shadowColor=`rgba(${col},.5)`; ctx.shadowBlur=6; ctx.stroke(); ctx.shadowBlur=0;
       }
     }
 
@@ -479,7 +481,7 @@
     if(smag>0.94) cand.push({sev:2,lvl:'limit',word:'hold the wheel — at steering limit',dot:'var(--crit)',glow:'transparent',border:'rgba(255,68,56,.6)',pri:1});
     else if(smag>0.8) cand.push({sev:1,lvl:'amber',word:'sharp curve — stay ready',dot:'var(--warn)',glow:'transparent',border:'rgba(255,176,32,.5)',pri:4});
     if(bmag>0.9) cand.push({sev:2,lvl:'brakelimit',word:'hard braking — stay ready',dot:'var(--crit)',glow:'inset 0 0 80px rgba(255,68,56,.2)',border:'rgba(255,68,56,.55)',pri:2});
-    else if(bmag>0.7) cand.push({sev:1,lvl:'amber',word:'closing gap — ease in',dot:'var(--warn)',glow:'transparent',border:'rgba(255,176,32,.45)',pri:5});
+    else if(bmag>0.7) cand.push({sev:1,lvl:'amber',word:'firm braking — stay ready',dot:'var(--warn)',glow:'transparent',border:'rgba(255,176,32,.45)',pri:5});
     let ch=null;
     for(const x of cand){ if(!ch || x.sev>ch.sev || (x.sev===ch.sev && x.pri<ch.pri)) ch=x; }
     if(ch){ level=ch.lvl;
