@@ -708,7 +708,7 @@
   const attnI=document.getElementById('attn'), attnV=document.getElementById('attnVal');
   const shoutEl=document.getElementById('shout'), afterGlow=document.getElementById('afterGlow'), nudgeEl=document.getElementById('nudge');
   const dmBefore=document.getElementById('dmBefore'), dmAfter=document.getElementById('dmAfter');
-  let attnCur=0, attnLastCue=0, _dmA='', _dmB='', _nudge='', _shout=null;
+  let attnCur=0, attnLastCue=0, attnWarned=false, _dmA='', _dmB='', _nudge='', _shout=null;
   function paintAttn(now){
     const v=attnCur;
     attnV.textContent = v<25?'focused' : v<60?'glancing away' : 'looking away';
@@ -736,13 +736,13 @@
       if(_nudge!==txt){ nudgeEl.textContent=txt; nudgeEl.classList.add('on'); _nudge=txt; }
       nudgeEl.style.borderColor = warm?'rgba(255,176,32,.5)':'rgba(255,68,56,.65)';
     }
-    // reserved sound: a calm cue that quickens as attention worsens (never on until it matters)
+    // reserved sound: one buzz at onset to catch the eye, then a cue that quickens as attention worsens
     if(S.sound && attnCur>=28){
       const tt=(attnCur-28)/72;
-      if(tt>0.5){ const interval=1100-620*tt;
+      if(!attnWarned){ tone(466,0.20,{type:'sine',gain:.05}); attnWarned=true; attnLastCue=now; }
+      else if(tt>0.5){ const interval=1100-620*tt;
         if(now-attnLastCue>interval){ tone(tt>0.8?587:494,0.2,{gain:0.045}); attnLastCue=now; } }
-      else attnLastCue=now;
-    } else attnLastCue=now;
+    } else { attnWarned=false; attnLastCue=now; }
   }
   attnI.addEventListener('input',e=>{ensureAudio();attnCur=+e.target.value;});
 
