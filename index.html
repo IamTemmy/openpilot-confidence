@@ -181,6 +181,10 @@
           <label>Steering effort <b id="loadVal">18% left</b></label>
           <input type="range" id="load" min="-100" max="100" value="-18" />
         </div>
+        <div class="slider">
+          <label>Longitudinal effort <b id="lonVal">8% accel</b></label>
+          <input type="range" id="lon" min="-100" max="100" value="8" />
+        </div>
       </div>
     </div>
 
@@ -192,8 +196,13 @@
       </div>
       <div class="leg">
         <svg class="sw" width="16" height="16"><rect width="16" height="16" rx="3" fill="#FFB020"/></svg>
-        <div><div class="k">Edge strain</div>
-          <div class="d">In a hard curve the strained edge of the path brightens as openpilot nears its steering-torque limit — an early, directional cue instead of an alert after the wheel gives out.</div></div>
+        <div><div class="k">Steering strain</div>
+          <div class="d">In a hard curve the strained side edge of the path brightens as openpilot nears its steering-torque limit — an early, directional cue instead of an alert after the wheel gives out.</div></div>
+      </div>
+      <div class="leg">
+        <svg class="sw" width="16" height="16"><rect width="16" height="16" rx="3" fill="#FF7828"/></svg>
+        <div><div class="k">Braking strain + lead</div>
+          <div class="d">A chevron marks the car ahead. As openpilot brakes toward its authority limit, a tension band grows back from the lead — the fore-aft mirror of steering strain. Hard acceleration shows as forward surge chevrons.</div></div>
       </div>
       <div class="leg">
         <svg class="sw" width="16" height="16"><rect width="16" height="16" rx="3" fill="#FF4438"/></svg>
@@ -218,6 +227,7 @@
   const S = {
     conf:92, confT:92, load:-18, loadT:-18, curve:0.06, curveT:0.06,
     speed:64, speedT:64, setspeed:65, limit:65, dash:0,
+    lon:8, lonT:8, lead:0.7,   // longitudinal effort (-brake..+accel), lead position 0..1 or null
     view:'abstract', sound:false
   };
   const lerp=(a,b,t)=>a+(b-a)*t;
@@ -249,6 +259,7 @@
   const centerX=t=>W/2 + S.curve * W * (t*t) * 0.9;
   const roadHalf=t=>lerp(W*0.46, W*0.018, t);
   const pathHalf=t=>roadHalf(t)*0.60;
+  const reachOf=()=>0.16+0.80*(S.conf/100);
   const blurF=()=>Math.max(0,Math.min(1,(S.speed-28)/62)); // motion-blur amount
 
   // ---------- ABSTRACT scene ----------
@@ -370,6 +381,55 @@
     }
   }
 
+  // ---------- longitudinal: lead car + brake/accel strain ----------
+  function paintLongitudinal(reach){
+    const lonMag=Math.abs(S.lon)/100, braking=S.lon<0, leadT=S.lead;
+
+    // braking strain band — grows back from the lead as braking nears its limit
+    if(braking && lonMag>0.28 && leadT!=null){
+      const strength=(lonMag-0.28)/0.72;
+      const col = strength>0.8?'255,68,56' : strength>0.5?'255,120,40' : '255,176,32';
+      const pulse = strength>0.8?(0.6+0.4*Math.sin(Date.now()/200)):1;
+      const tLead=leadT, tNear=Math.max(0.04, leadT*(1-strength*0.8));
+      ctx.beginPath();
+      for(let i=0;i<=30;i++){const t=lerp(tNear,tLead,i/30);ctx.lineTo(centerX(t)-pathHalf(t),roadY(t));}
+      for(let i=30;i>=0;i--){const t=lerp(tNear,tLead,i/30);ctx.lineTo(centerX(t)+pathHalf(t),roadY(t));}
+      ctx.closePath();
+      ctx.fillStyle=`rgba(${col},${((0.16+0.34*strength)*pulse).toFixed(3)})`; ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(centerX(tLead)-pathHalf(tLead),roadY(tLead));
+      ctx.lineTo(centerX(tLead)+pathHalf(tLead),roadY(tLead));
+      ctx.strokeStyle=`rgba(${col},${(0.75*pulse).toFixed(3)})`; ctx.lineWidth=Math.max(2,W*0.006);
+      ctx.shadowColor=`rgba(${col},.7)`; ctx.shadowBlur=8+10*strength; ctx.stroke(); ctx.shadowBlur=0;
+    }
+
+    // acceleration surge — forward chevrons that brighten near the accel limit
+    if(!braking && lonMag>0.4){
+      const strength=(lonMag-0.4)/0.6, col=strength>0.85?'255,176,32':'120,255,180', n=4;
+      for(let k=0;k<n;k++){
+        const base=((k/n)+(S.dash*2))%1, t=base*Math.min(reach,0.5);
+        const y=roadY(t), x=centerX(t), hw=pathHalf(t)*0.5, dip=hw*0.5;
+        ctx.beginPath();
+        ctx.moveTo(x-hw,y+dip); ctx.lineTo(x,y-dip*0.2); ctx.lineTo(x+hw,y+dip);
+        ctx.strokeStyle=`rgba(${col},${((0.3+0.5*strength)*(1-base)).toFixed(3)})`;
+        ctx.lineWidth=Math.max(1.5,W*0.004*(1-base)+1); ctx.stroke();
+      }
+    }
+
+    // lead chevron marker
+    if(leadT!=null){
+      const t=leadT, y=roadY(t), x=centerX(t), sz=Math.max(6,(1-t)*34);
+      const strain=(braking&&lonMag>0.5)?(lonMag>0.8?'255,68,56':'255,120,40'):'230,240,245';
+      ctx.save();
+      ctx.strokeStyle=`rgba(${strain},.95)`; ctx.lineWidth=Math.max(2,sz*0.16);
+      ctx.lineJoin='round'; ctx.lineCap='round';
+      ctx.shadowColor=`rgba(${strain},.6)`; ctx.shadowBlur=8;
+      ctx.beginPath();
+      ctx.moveTo(x-sz*0.6, y-sz*1.15); ctx.lineTo(x, y-sz*0.55); ctx.lineTo(x+sz*0.6, y-sz*1.15);
+      ctx.stroke(); ctx.restore();
+    }
+  }
+
   // camera post: grain + vignette (drawn over everything)
   function paintCameraPost(){
     if(grain){
@@ -412,17 +472,27 @@
     el.setspeed.textContent=Math.round(S.setspeed);
     el.limit.textContent=Math.round(S.limit);
     el.wheel.innerHTML=wheelSVG(S.load);
-    const c=S.conf, mag=Math.abs(S.load)/100;
-    let word='engaged',dot='var(--go)',glow='transparent',show=false,border='var(--stroke)';
-    if(mag>0.94){ level='limit'; word='hold the wheel — at steering limit'; dot='var(--crit)'; show=true; border='rgba(255,68,56,.6)'; }
-    else if(c<24){ level='red'; word='take the wheel — low confidence ahead'; dot='var(--crit)'; glow='inset 0 0 90px rgba(255,68,56,.28)'; show=true; border='rgba(255,68,56,.55)'; }
-    else if(mag>0.8){ level='amber'; word='sharp curve — stay ready'; dot='var(--warn)'; show=true; border='rgba(255,176,32,.5)'; }
-    else if(c<48){ level='amber'; word='uncertain road — stay ready'; dot='var(--warn)'; glow='inset 0 0 70px rgba(255,176,32,.14)'; show=true; border='rgba(255,176,32,.4)'; }
-    else level='ok';
-    el.status.querySelector('.dot').style.background=dot;
-    el.status.querySelector('.txt').textContent=word;
-    el.status.style.borderColor=border; el.status.classList.toggle('show',show);
-    el.periph.style.boxShadow=glow;
+    const c=S.conf, smag=Math.abs(S.load)/100, bmag=(S.lon<0?Math.abs(S.lon)/100:0);
+    const cand=[];
+    if(c<24) cand.push({sev:2,lvl:'red',word:'take the wheel — low confidence ahead',dot:'var(--crit)',glow:'inset 0 0 90px rgba(255,68,56,.28)',border:'rgba(255,68,56,.55)',pri:0});
+    else if(c<48) cand.push({sev:1,lvl:'amber',word:'uncertain road — stay ready',dot:'var(--warn)',glow:'inset 0 0 70px rgba(255,176,32,.14)',border:'rgba(255,176,32,.4)',pri:3});
+    if(smag>0.94) cand.push({sev:2,lvl:'limit',word:'hold the wheel — at steering limit',dot:'var(--crit)',glow:'transparent',border:'rgba(255,68,56,.6)',pri:1});
+    else if(smag>0.8) cand.push({sev:1,lvl:'amber',word:'sharp curve — stay ready',dot:'var(--warn)',glow:'transparent',border:'rgba(255,176,32,.5)',pri:4});
+    if(bmag>0.9) cand.push({sev:2,lvl:'brakelimit',word:'hard braking — stay ready',dot:'var(--crit)',glow:'inset 0 0 80px rgba(255,68,56,.2)',border:'rgba(255,68,56,.55)',pri:2});
+    else if(bmag>0.7) cand.push({sev:1,lvl:'amber',word:'closing gap — ease in',dot:'var(--warn)',glow:'transparent',border:'rgba(255,176,32,.45)',pri:5});
+    let ch=null;
+    for(const x of cand){ if(!ch || x.sev>ch.sev || (x.sev===ch.sev && x.pri<ch.pri)) ch=x; }
+    if(ch){ level=ch.lvl;
+      el.status.querySelector('.dot').style.background=ch.dot;
+      el.status.querySelector('.txt').textContent=ch.word;
+      el.status.style.borderColor=ch.border; el.status.classList.add('show');
+      el.periph.style.boxShadow=ch.glow;
+    } else { level='ok';
+      el.status.querySelector('.dot').style.background='var(--go)';
+      el.status.querySelector('.txt').textContent='engaged';
+      el.status.style.borderColor='var(--stroke)'; el.status.classList.remove('show');
+      el.periph.style.boxShadow='transparent';
+    }
   }
 
   // ---------- audio (synth, reserved) ----------
@@ -437,20 +507,23 @@
     amber(){ tone(560,0.16,{gain:.03}); },
     handoff(){ tone(523,0.5,{gain:.05}); tone(392,0.6,{delay:.28,gain:.05}); },   // gentle descending
     limit(){ tone(300,0.34,{type:'triangle',gain:.055}); },
+    brake(){ tone(220,0.30,{type:'triangle',gain:.055}); tone(180,0.34,{delay:.16,type:'triangle',gain:.05}); }, // low, calm
     recover(){ tone(392,.2,{gain:.04}); tone(523,.28,{delay:.16,gain:.045}); }    // ascending reassurance
   };
   function audioTick(now){
     if(!S.sound){ prevLevel=level; return; }
     if(level!==prevLevel){
-      if(level==='amber'&&(prevLevel==='ok')) earcon.amber();
+      if(level==='amber'&&prevLevel==='ok') earcon.amber();
       else if(level==='red') earcon.handoff();
       else if(level==='limit') earcon.limit();
-      else if(level==='ok'&&(prevLevel==='red'||prevLevel==='limit')) earcon.recover();
+      else if(level==='brakelimit') earcon.brake();
+      else if(level==='ok'&&(prevLevel==='red'||prevLevel==='limit'||prevLevel==='brakelimit')) earcon.recover();
       lastPulse=now; prevLevel=level;
     }
     // sustained, slow, non-naggy repeats while critical
     if(level==='red'&&now-lastPulse>1600){ earcon.handoff(); lastPulse=now; }
     if(level==='limit'&&now-lastPulse>900){ earcon.limit(); lastPulse=now; }
+    if(level==='brakelimit'&&now-lastPulse>1000){ earcon.brake(); lastPulse=now; }
   }
 
   // ---------- loop ----------
@@ -459,35 +532,40 @@
     S.conf=lerp(S.conf,S.confT,k); S.load=lerp(S.load,S.loadT,k);
     S.curve=lerp(S.curve,S.curveT,k); S.speed=lerp(S.speed,S.speedT,k);
     if(!reduce) S.dash=(S.dash+(0.0018+S.speed*0.00004))%1;
-    if(S.view==='camera'){ paintCamera(); paintPath(); paintCameraPost(); }
-    else { paintAbstract(); paintPath(); }
+    if(S.view==='camera'){ paintCamera(); paintPath(); paintLongitudinal(reachOf()); paintCameraPost(); }
+    else { paintAbstract(); paintPath(); paintLongitudinal(reachOf()); }
     updateChrome(); audioTick(now||0);
     requestAnimationFrame(frame);
   }
 
   // ---------- controls ----------
-  const confI=document.getElementById('conf'), loadI=document.getElementById('load');
-  const confV=document.getElementById('confVal'), loadV=document.getElementById('loadVal');
+  const confI=document.getElementById('conf'), loadI=document.getElementById('load'), lonI=document.getElementById('lon');
+  const confV=document.getElementById('confVal'), loadV=document.getElementById('loadVal'), lonV=document.getElementById('lonVal');
   function syncLabels(){ confV.textContent=Math.round(S.confT)+'%';
-    const l=Math.round(S.loadT); loadV.textContent=l===0?'centered':Math.abs(l)+'% '+(l<0?'left':'right'); }
+    const l=Math.round(S.loadT); loadV.textContent=l===0?'centered':Math.abs(l)+'% '+(l<0?'left':'right');
+    const lo=Math.round(S.lonT); lonV.textContent=lo===0?'coasting':(lo<0?Math.abs(lo)+'% braking':lo+'% accel'); }
   confI.addEventListener('input',e=>{ensureAudio();S.confT=+e.target.value;clearActive();syncLabels();});
   loadI.addEventListener('input',e=>{ensureAudio();S.loadT=+e.target.value;clearActive();syncLabels();});
+  lonI.addEventListener('input',e=>{ensureAudio();S.lonT=+e.target.value;clearActive();syncLabels();});
 
   const SCEN=[
-    {n:'Open highway',    conf:94, load:12, curve:0.05, speed:64, set:65, limit:65},
-    {n:'Faded markings',  conf:46, load:16, curve:0.10, speed:41, set:45, limit:45},
-    {n:'Sharp off-ramp',  conf:72, load:90, curve:0.34, speed:33, set:40, limit:40},
-    {n:'Crosswind gust',  conf:60, load:70, curve:0.08, speed:58, set:60, limit:60},
-    {n:'Low-sun glare',   conf:18, load:24, curve:0.06, speed:44, set:50, limit:50},
-    {n:'Construction zone',conf:34,load:40, curve:0.14, speed:28, set:35, limit:35},
+    {n:'Open highway',     conf:94, load:12, lon:8,   lead:0.72, curve:0.05, speed:64, set:65, limit:65},
+    {n:'Faded markings',   conf:46, load:16, lon:0,   lead:null, curve:0.10, speed:41, set:45, limit:45},
+    {n:'Sharp off-ramp',   conf:72, load:90, lon:-30, lead:null, curve:0.34, speed:33, set:40, limit:40},
+    {n:'Crosswind gust',   conf:60, load:70, lon:6,   lead:0.66, curve:0.08, speed:58, set:60, limit:60},
+    {n:'Low-sun glare',    conf:18, load:24, lon:-20, lead:0.55, curve:0.06, speed:44, set:50, limit:50},
+    {n:'Construction zone',conf:34, load:40, lon:-48, lead:0.46, curve:0.14, speed:28, set:35, limit:35},
+    {n:'Lead braking hard',conf:78, load:10, lon:-92, lead:0.34, curve:0.05, speed:40, set:45, limit:45},
+    {n:'Merging on-ramp',  conf:70, load:35, lon:78,  lead:null, curve:0.12, speed:52, set:60, limit:60},
   ];
   const scEl=document.getElementById('scenarios');
   function clearActive(){[...scEl.children].forEach(c=>c.classList.remove('active'));}
   SCEN.forEach((s,i)=>{
     const b=document.createElement('button'); b.className='chip'; b.textContent=s.n;
     b.addEventListener('click',()=>{ ensureAudio(); clearActive(); b.classList.add('active');
-      S.confT=s.conf; S.loadT=s.load; S.curveT=s.curve; S.speedT=s.speed; S.setspeed=s.set; S.limit=s.limit;
-      confI.value=s.conf; loadI.value=s.load; syncLabels(); });
+      S.confT=s.conf; S.loadT=s.load; S.lonT=s.lon; S.lead=s.lead;
+      S.curveT=s.curve; S.speedT=s.speed; S.setspeed=s.set; S.limit=s.limit;
+      confI.value=s.conf; loadI.value=s.load; lonI.value=s.lon; syncLabels(); });
     if(i===0) b.classList.add('active'); scEl.appendChild(b);
   });
 
