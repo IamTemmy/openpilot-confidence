@@ -704,11 +704,9 @@
     S.conf=lerp(S.conf,S.confT,k); S.load=lerp(S.load,S.loadT,k); S.lon=lerp(S.lon,S.lonT,k);
     S.curve=lerp(S.curve,S.curveT,k); S.speed=lerp(S.speed,S.speedT,k);
     if(!reduce) S.dash=(S.dash+(0.0018+S.speed*0.00004))%1;
-    if(S.view==='camera'){ paintCamera(); paintPath(); paintLongitudinal(reachOf()); paintCameraPost(); viddbg.style.display='none'; }
-    else if(S.view==='real'){ drawVideoCover(realVid); paintPath(); paintLongitudinal(reachOf());
-      viddbg.style.display='block';
-      viddbg.textContent='vid rs='+realVid.readyState+' '+realVid.videoWidth+'x'+realVid.videoHeight+' paused='+realVid.paused+' err='+(realVid.error?realVid.error.code:0); }
-    else { paintAbstract(); paintPath(); paintLongitudinal(reachOf()); viddbg.style.display='none'; }
+    if(S.view==='camera'){ paintCamera(); paintPath(); paintLongitudinal(reachOf()); paintCameraPost(); }
+    else if(S.view==='real'){ drawVideoCover(realVid); paintPath(); paintLongitudinal(reachOf()); }
+    else { paintAbstract(); paintPath(); paintLongitudinal(reachOf()); }
     updateChrome(); audioTick(now||0); paintAttn(now||0);
     requestAnimationFrame(frame);
   }
@@ -755,10 +753,6 @@
     realVid.src=URL.createObjectURL(new Blob([buf],{type:'video/mp4'}));
     realVid.load(); realVid.play().catch(()=>{});
   }).catch(()=>{ realVid.src='assets/drive.mp4'; realVid.load(); realVid.play().catch(()=>{}); });
-  const viddbg=document.createElement('div');
-  viddbg.style.cssText='position:absolute;right:8px;bottom:8px;z-index:8;font:600 10px ui-monospace,monospace;color:#7fffb0;background:rgba(0,0,0,.6);padding:3px 7px;border-radius:6px;display:none;pointer-events:none;';
-  document.querySelector('.stage').appendChild(viddbg);
-  realVid.addEventListener('error',()=>{ viddbg.dataset.err='1'; });
   viewSeg.addEventListener('click',e=>{ const btn=e.target.closest('button'); if(!btn)return;
     [...viewSeg.children].forEach(c=>c.classList.remove('active')); btn.classList.add('active');
     S.view=btn.dataset.view;
