@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>openpilot · confidence — concept</title>
+<title>openpilot · confidence · concept</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -210,7 +210,7 @@
       <span class="tag">concept prototype</span>
     </div>
     <div class="note">A deployable evolution of the openpilot view. Confidence and steering headroom
-      live on the path itself — glanceable, predictive, and quiet until it matters.</div>
+      live on the path itself. Glanceable, predictive, and quiet until it matters.</div>
   </div>
 
   <div class="toolbar">
@@ -294,30 +294,30 @@
       <div class="leg">
         <svg class="sw" width="16" height="16"><rect width="16" height="16" rx="3" fill="#2FE07A"/></svg>
         <div><div class="k">Reach of the path</div>
-          <div class="d">A long solid ribbon means openpilot is sure of the road well ahead. As confidence drops the ribbon dissolves and pulls back toward the car — you see trust shorten before anything goes wrong.</div></div>
+          <div class="d">A long solid ribbon means openpilot is sure of the road well ahead. As confidence drops the ribbon dissolves and pulls back toward the car, so you see trust shorten before anything goes wrong.</div></div>
       </div>
       <div class="leg">
         <svg class="sw" width="16" height="16"><rect width="16" height="16" rx="3" fill="#FFB020"/></svg>
         <div><div class="k">Steering strain</div>
-          <div class="d">In a hard curve the strained side edge of the path brightens as openpilot nears its steering-torque limit — an early, directional cue instead of an alert after the wheel gives out.</div></div>
+          <div class="d">In a hard curve the strained side edge of the path brightens as openpilot nears its steering torque limit. An early, directional cue instead of an alert after the wheel gives out.</div></div>
       </div>
       <div class="leg">
         <svg class="sw" width="16" height="16"><rect width="16" height="16" rx="3" fill="#FF7828"/></svg>
         <div><div class="k">Braking strain + lead</div>
-          <div class="d">A chevron marks the car ahead. As openpilot brakes toward its authority limit, a tension band grows back from the lead — the fore-aft mirror of steering strain. Hard acceleration shows as forward surge chevrons.</div></div>
+          <div class="d">A chevron marks the car ahead. As openpilot brakes toward its authority limit, a tension band grows back from the lead, mirroring steering strain front to back. Hard acceleration shows as forward surge chevrons.</div></div>
       </div>
       <div class="leg">
         <svg class="sw" width="16" height="16"><rect width="16" height="16" rx="3" fill="#FF4438"/></svg>
         <div><div class="k">Hand-off + sound</div>
-          <div class="d">Only when a hand-off is likely does a calm edge-breath, a plain prompt, and a soft reserved chime appear. Silence means trust — so the sound, when it comes, actually means something.</div></div>
+          <div class="d">Only when a hand-off is likely does a calm edge-breath, a plain prompt, and a soft reserved chime appear. Silence means trust, so the sound, when it comes, actually means something.</div></div>
       </div>
     </div>
   </div>
 
   <div class="attn">
     <div class="attn-head">
-      <h2>Driver attention — restraint over shouting</h2>
-      <p>openpilot already knows when your eyes drift — 0.11.1 even warms the driver-monitoring icon before any alert fires. But today that path still ends in a full-screen shout. The same signal can be handled as a calm, earlier, graduated nudge that never hijacks the screen. Drag the attention slider and compare the two.</p>
+      <h2>Driver attention: restraint over shouting</h2>
+      <p>openpilot already knows when your eyes drift. Version 0.11.1 even warms the driver monitoring icon before any alert fires. But today that path still ends in a full-screen shout. The same signal can be handled as a calm, earlier, graduated nudge that never hijacks the screen. Drag the attention slider and compare the two.</p>
     </div>
     <div class="attn-grid">
       <div class="attn-frame" id="beforeFrame">
@@ -344,25 +344,25 @@
   <div class="case">
     <div class="eyebrow">The thinking</div>
     <h2>Confidence, drawn where confidence lives</h2>
-    <p>openpilot is a Level&nbsp;2 system: it doesn't handle every situation, but it knows how likely it is to struggle. Today the driver only learns that at the last second — an alert that fires <strong>after</strong> the wheel has already run out of torque and the car has begun to drift. By then it's late, and the alert is more annoying than useful. The task was to make that knowledge <strong>continuous, glanceable, and calm.</strong></p>
-    <p>Every other entry reaches for a new gauge — a colored ring, a row of bars, a frame around the screen. We did the opposite. Confidence is about the road ahead, so we made the <strong>path openpilot already draws</strong> carry the meaning. There's nothing new to read: the instrument is the thing you're already looking at.</p>
+    <p>openpilot is a Level&nbsp;2 system: it doesn't handle every situation, but it knows how likely it is to struggle. Today the driver only learns that at the last second, an alert that fires <strong>after</strong> the wheel has already run out of torque and the car has begun to drift. By then it's late, and the alert is more annoying than useful. The task was to make that knowledge <strong>continuous, glanceable, and calm.</strong></p>
+    <p>Every other entry reaches for a new gauge: a colored ring, a row of bars, a frame around the screen. We did the opposite. Confidence is about the road ahead, so we made the <strong>path openpilot already draws</strong> carry the meaning. There's nothing new to read: the instrument is the thing you're already looking at.</p>
     <div class="points">
-      <div class="pt"><h3><span class="sw" style="background:#2FE07A"></span>Reach is confidence</h3><p>A long, solid ribbon means openpilot is sure of the road far ahead. As confidence falls the ribbon dissolves and pulls back toward the car — so you watch trust shorten <em>before</em> anything goes wrong. Continuous, and readable at a glance.</p></div>
-      <div class="pt"><h3><span class="sw" style="background:#FFB020"></span>Strain is headroom</h3><p>The side edge brightens as steering nears its torque limit; a cross-band and the lead's brake lights build as braking nears its authority; forward chevrons surge near the accel limit. All three actuator limits — early and directional, not an alert after the fact.</p></div>
-      <div class="pt"><h3><span class="sw" style="background:#FF4438"></span>Restraint is trust</h3><p>Silence and green mean the system is fine. Sound and color are held back for the moments that matter — a hand-off, a limit, a distracted glance — so when they arrive, they mean something. The same restraint replaces the full-screen "pay attention" shout.</p></div>
+      <div class="pt"><h3><span class="sw" style="background:#2FE07A"></span>Reach is confidence</h3><p>A long, solid ribbon means openpilot is sure of the road far ahead. As confidence falls the ribbon dissolves and pulls back toward the car, so you watch trust shorten <em>before</em> anything goes wrong. Continuous, and readable at a glance.</p></div>
+      <div class="pt"><h3><span class="sw" style="background:#FFB020"></span>Strain is headroom</h3><p>The side edge brightens as steering nears its torque limit; a cross-band and the lead's brake lights build as braking nears its authority; forward chevrons surge near the accel limit. All three actuator limits, early and directional, not an alert after the fact.</p></div>
+      <div class="pt"><h3><span class="sw" style="background:#FF4438"></span>Restraint is trust</h3><p>Silence and green mean the system is fine. Sound and color are held back for the moments that matter: a handover, a limit, a distracted glance. When they arrive, they mean something. The same restraint replaces the full-screen "pay attention" shout.</p></div>
     </div>
     <div class="close">
       <h3>Why it ships</h3>
-      <p>It keeps openpilot's real visual language — dark, flat, the openpilot green — and it doesn't collide with the driver-monitoring icon, which already owns green and amber for attention. It's glanceable in windshield peripheral vision, and the <strong>Real drive</strong> view shows the exact overlay sitting on comma's own dashcam footage, unchanged. This reads as a better openpilot, not a redesign of the device — and it points the same direction comma's 0.11.1 release is already heading: subtle, earlier cues instead of late, loud ones.</p>
-      <p class="lim">Honest limits: this is a concept prototype. In Real drive the path is a fixed straight overlay on recorded footage — the shipped version would follow the trajectory openpilot computes each frame — and the clip can't change to match a scenario. The proposal is the interaction model, not the footage.</p>
+      <p>It keeps openpilot's real visual language, dark and flat with the openpilot green, and it doesn't collide with the driver-monitoring icon, which already owns green and amber for attention. It's glanceable in windshield peripheral vision, and the <strong>Real drive</strong> view shows the exact overlay sitting on comma's own dashcam footage, unchanged. This reads as a better openpilot, not a redesign of the device, and it points the same direction comma's 0.11.1 release is already heading: subtle, earlier cues instead of late, loud ones.</p>
+      <p class="lim">Honest limits: this is a concept prototype. In Real drive the path is a fixed straight overlay on recorded footage. The shipped version would follow the trajectory openpilot computes each frame, and the clip can't change to match a scenario. The proposal is the interaction model, not the footage.</p>
     </div>
   </div>
 
   <div class="foot">
-    <b>Note.</b> Independent concept for the comma design challenge — not affiliated with comma.ai.
+    <b>Note.</b> Independent concept for the comma design challenge, not affiliated with comma.ai.
     "Abstract" and "Camera" backdrops are stylized renders; "Real drive" composites our live overlay onto a clip from comma's
     MIT-licensed <a href="https://github.com/commaai/comma_video_compression_challenge">video compression challenge</a>.
-    The proposal is the interaction model — living path, edge strain, reserved escalation — designed to sit on the real camera feed unchanged.
+    The proposal is the interaction model: living path, edge strain, reserved escalation, designed to sit on the real camera feed unchanged.
   </div>
 
 <script>
@@ -537,7 +537,7 @@
     ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
     ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
   }
-  // lead vehicle glyph — a flat car-rear silhouette; brake lights glow as openpilot brakes toward it
+  // lead vehicle glyph: a flat rear silhouette; brake lights glow as openpilot brakes toward it
   function drawLead(t, brakeGlow){
     const x=centerX(t), baseY=roadY(t);
     const w=Math.max(26,pathHalf(t)*1.28), carH=w*0.62;
@@ -581,7 +581,7 @@
     const lonMag=Math.abs(S.lon)/100, braking=S.lon<0, leadT=(S.view==='real'?null:S.lead);
     let brakeStrength=0;
 
-    // braking — a red zone paints the road from you up to the lead, with bold rungs, brighter as braking nears its limit
+    // braking: a red zone paints the road from you up to the lead, with bold rungs, brighter as braking nears its limit
     if(braking && lonMag>0.24){
       brakeStrength=Math.min(1,(lonMag-0.24)/0.76);
       const anchor=(leadT!=null)?leadT:0.34, tNear=0.06;
@@ -608,7 +608,7 @@
       }
     }
 
-    // acceleration — forward surge chevrons that brighten near the accel limit
+    // acceleration: forward surge chevrons that brighten near the accel limit
     if(!braking && lonMag>0.32){
       const strength=Math.min(1,(lonMag-0.32)/0.68), col=strength>0.85?'255,176,32':'150,255,190', n=5;
       for(let k=0;k<n;k++){
@@ -669,12 +669,12 @@
     el.wheel.innerHTML=wheelSVG(S.load);
     const c=S.conf, smag=Math.abs(S.load)/100, bmag=(S.lon<0?Math.abs(S.lon)/100:0);
     const cand=[];
-    if(c<24) cand.push({sev:2,lvl:'red',word:'take the wheel — low confidence ahead',dot:'var(--crit)',glow:'inset 0 0 90px rgba(255,68,56,.28)',border:'rgba(255,68,56,.55)',pri:0});
-    else if(c<48) cand.push({sev:1,lvl:'amber',word:'uncertain road — stay ready',dot:'var(--warn)',glow:'inset 0 0 70px rgba(255,176,32,.14)',border:'rgba(255,176,32,.4)',pri:3});
-    if(smag>0.94) cand.push({sev:2,lvl:'limit',word:'hold the wheel — at steering limit',dot:'var(--crit)',glow:'transparent',border:'rgba(255,68,56,.6)',pri:1});
-    else if(smag>0.8) cand.push({sev:1,lvl:'amber',word:'sharp curve — stay ready',dot:'var(--warn)',glow:'transparent',border:'rgba(255,176,32,.5)',pri:4});
-    if(bmag>0.9) cand.push({sev:2,lvl:'brakelimit',word:'hard braking — stay ready',dot:'var(--crit)',glow:'inset 0 0 80px rgba(255,68,56,.2)',border:'rgba(255,68,56,.55)',pri:2});
-    else if(bmag>0.7) cand.push({sev:1,lvl:'amber',word:'firm braking — stay ready',dot:'var(--warn)',glow:'transparent',border:'rgba(255,176,32,.45)',pri:5});
+    if(c<24) cand.push({sev:2,lvl:'red',word:'take the wheel, low confidence ahead',dot:'var(--crit)',glow:'inset 0 0 90px rgba(255,68,56,.28)',border:'rgba(255,68,56,.55)',pri:0});
+    else if(c<48) cand.push({sev:1,lvl:'amber',word:'uncertain road, stay ready',dot:'var(--warn)',glow:'inset 0 0 70px rgba(255,176,32,.14)',border:'rgba(255,176,32,.4)',pri:3});
+    if(smag>0.94) cand.push({sev:2,lvl:'limit',word:'hold the wheel, at steering limit',dot:'var(--crit)',glow:'transparent',border:'rgba(255,68,56,.6)',pri:1});
+    else if(smag>0.8) cand.push({sev:1,lvl:'amber',word:'sharp curve, stay ready',dot:'var(--warn)',glow:'transparent',border:'rgba(255,176,32,.5)',pri:4});
+    if(bmag>0.9) cand.push({sev:2,lvl:'brakelimit',word:'hard braking, stay ready',dot:'var(--crit)',glow:'inset 0 0 80px rgba(255,68,56,.2)',border:'rgba(255,68,56,.55)',pri:2});
+    else if(bmag>0.7) cand.push({sev:1,lvl:'amber',word:'firm braking, stay ready',dot:'var(--warn)',glow:'transparent',border:'rgba(255,176,32,.45)',pri:5});
     let ch=null;
     for(const x of cand){ if(!ch || x.sev>ch.sev || (x.sev===ch.sev && x.pri<ch.pri)) ch=x; }
     if(ch){ level=ch.lvl;
@@ -819,12 +819,12 @@
   function paintAttn(now){
     const v=attnCur;
     attnV.textContent = v<25?'focused' : v<60?'glancing away' : 'looking away';
-    // BEFORE — 0.11.1 warms the icon, then jumps straight to a full-screen shout that covers the road
+    // BEFORE: 0.11.1 warms the icon, then jumps straight to a full-screen shout that covers the road
     const dmBcol=v>40?'#FF7A1A':'#2FE07A';
     if(dmBcol!==_dmB){ dmBefore.innerHTML=dmMini(dmBcol); _dmB=dmBcol; }
     const shoutOn=v>55;
     if(shoutOn!==_shout){ shoutEl.classList.toggle('on',shoutOn); _shout=shoutOn; }
-    // AFTER — continuous escalation: subtle nudge -> urgent red peripheral flood, road never covered
+    // AFTER: continuous escalation: subtle nudge -> urgent red peripheral flood, road never covered
     if(v<28){
       afterGlow.style.boxShadow='inset 0 0 0 0 rgba(0,0,0,0)';
       if(_dmA!=='#2FE07A'){ dmAfter.innerHTML=dmMini('#2FE07A'); _dmA='#2FE07A'; }
