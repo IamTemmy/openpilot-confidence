@@ -1,8 +1,9 @@
 # Design notes
 
-These are the decisions I made and why. I used AI to help write the code, but the design direction,
-the choices below, and the responses to feedback are mine. (Remove this line if you'd rather not
-mention it.)
+I utilized the use of AI to implement my design ideas in this project. The delegation, description,
+and discernment of every feature was mine. Several iterations were made throughout the process.
+
+These are the decisions I made and why.
 
 ## Why the path, not a ring or bars
 
