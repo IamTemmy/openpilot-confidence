@@ -687,8 +687,8 @@
       el.status.querySelector('.dot').style.background='var(--go)';
       el.status.querySelector('.txt').textContent='engaged';
       el.status.style.borderColor='var(--stroke)'; el.status.classList.remove('show');
-      el.redwash.style.transition='opacity .5s ease'; el.redwash.style.opacity='0';
-      el.periph.style.transition='box-shadow .5s ease'; el.periph.style.boxShadow='transparent';
+      el.redwash.style.transition='none'; el.redwash.style.opacity='0';
+      el.periph.style.transition='none'; el.periph.style.boxShadow='transparent';
     }
   }
 
@@ -829,7 +829,7 @@
     if(shoutOn!==_shout){ shoutEl.classList.toggle('on',shoutOn); _shout=shoutOn; }
     // AFTER: same breathing language as the main view (soft slow amber, aggressive fast red)
     if(v<28){
-      afterGlow.style.transition='opacity .35s ease'; afterGlow.style.opacity='0';
+      afterGlow.style.transition='none'; afterGlow.style.opacity='0';
       if(_dmA!=='#2FE07A'){ dmAfter.innerHTML=dmMini('#2FE07A'); _dmA='#2FE07A'; }
       if(_nudge!==''){ nudgeEl.classList.remove('on'); _nudge=''; }
     } else {
