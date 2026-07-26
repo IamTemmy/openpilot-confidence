@@ -644,7 +644,7 @@
       <path d="M18 37 q8 -8 16 0" fill="none" stroke="#cfe9d8" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
   let level='ok';
-  function updateChrome(){
+  function updateChrome(now){
     el.speed.textContent=Math.round(S.speed);
     el.setspeed.textContent=Math.round(S.setspeed);
     el.limit.textContent=Math.round(S.limit);
@@ -663,12 +663,21 @@
       el.status.querySelector('.dot').style.background=ch.dot;
       el.status.querySelector('.txt').textContent=ch.word;
       el.status.style.borderColor=ch.border; el.status.classList.add('show');
-      el.periph.style.boxShadow=ch.glow;
+      if(ch.sev===2){
+        // red states breathe hard: a flash that grows almost to a full-screen red wash and recedes,
+        // so it catches the eye in bright daylight without ever freezing as a solid panel
+        const p=0.5+0.5*Math.sin((now||0)/300*Math.PI);   // ~600ms cycle
+        el.periph.style.transition='none';
+        el.periph.style.boxShadow=`inset 0 0 0 ${(6+5*p).toFixed(0)}px rgba(255,60,48,${(0.8+0.2*p).toFixed(2)}), inset 0 0 ${(110+300*p).toFixed(0)}px rgba(255,48,38,${(0.12+0.52*p).toFixed(2)})`;
+      } else {
+        el.periph.style.transition='box-shadow .4s ease';
+        el.periph.style.boxShadow=ch.glow;
+      }
     } else { level='ok';
       el.status.querySelector('.dot').style.background='var(--go)';
       el.status.querySelector('.txt').textContent='engaged';
       el.status.style.borderColor='var(--stroke)'; el.status.classList.remove('show');
-      el.periph.style.boxShadow='transparent';
+      el.periph.style.transition='box-shadow .5s ease'; el.periph.style.boxShadow='transparent';
     }
   }
 
@@ -723,7 +732,7 @@
     if(S.view==='camera'){ paintCamera(); paintPath(); paintLongitudinal(reachOf()); paintCameraPost(); }
     else if(S.view==='real'){ drawVideoCover(realVid); paintPath(); paintLongitudinal(reachOf()); }
     else { paintAbstract(); paintPath(); paintLongitudinal(reachOf()); }
-    updateChrome(); audioTick(now||0); paintAttn(now||0);
+    updateChrome(now||0); audioTick(now||0); paintAttn(now||0);
     requestAnimationFrame(frame);
   }
 
