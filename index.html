@@ -50,6 +50,7 @@
     font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:color .16s,border-color .16s;}
   .pill-btn.on{color:var(--go);border-color:rgba(47,224,122,.4);}
   .pill-btn:focus-visible{outline:2px solid var(--go);outline-offset:2px;}
+  .pill-btn:disabled{opacity:.35;cursor:not-allowed;}
   .pill-btn svg{width:15px;height:15px;}
 
   /* ---------- device ---------- */
@@ -896,17 +897,17 @@
   }
   attnI.addEventListener('input',e=>{ensureAudio();attnCur=+e.target.value;});
 
-  // nav split toggle
+  // nav split toggle (disabled while comma four is active: a map does not fit the small screen)
   const navBtn=document.getElementById('navBtn'), deviceEl=document.getElementById('device');
-  navBtn.addEventListener('click',()=>{ const on=deviceEl.classList.toggle('nav-on');
+  navBtn.addEventListener('click',()=>{ if(navBtn.disabled) return; const on=deviceEl.classList.toggle('nav-on');
     navBtn.classList.toggle('on',on); navBtn.setAttribute('aria-pressed',on);
-    if(on && deviceEl.classList.contains('c4')){ deviceEl.classList.remove('c4'); c4Btn.classList.remove('on'); c4Btn.setAttribute('aria-pressed','false'); c4cap.classList.remove('show'); } });
+    c4Btn.disabled=on; });
 
   // comma four (small screen) toggle
   const c4Btn=document.getElementById('c4Btn'), c4cap=document.getElementById('c4cap');
-  c4Btn.addEventListener('click',()=>{ const on=deviceEl.classList.toggle('c4');
+  c4Btn.addEventListener('click',()=>{ if(c4Btn.disabled) return; const on=deviceEl.classList.toggle('c4');
     c4Btn.classList.toggle('on',on); c4Btn.setAttribute('aria-pressed',on); c4cap.classList.toggle('show',on);
-    if(on && deviceEl.classList.contains('nav-on')){ deviceEl.classList.remove('nav-on'); navBtn.classList.remove('on'); navBtn.setAttribute('aria-pressed','false'); } });
+    navBtn.disabled=on; });
 
   // hide the first-load hint once the user interacts with any control
   const hintEl=document.getElementById('hint');
