@@ -72,6 +72,27 @@
     font-size:clamp(10px,1.4vw,13px);font-variant-numeric:tabular-nums;}
   .nav-eta .t{font-weight:700;} .nav-eta .m{color:var(--go);font-weight:700;} .nav-eta .d{color:var(--muted);font-weight:600;}
 
+  /* ---------- comma four (small screen) ---------- */
+  .device.c4{aspect-ratio:1 / 1;max-width:460px;margin:0 auto;}
+  .device.c4 .nav{display:none;}
+  .device.c4 .hud{padding:11px;}
+  .device.c4 .setspeed{display:none;}
+  .device.c4 .tl{top:11px;left:11px;}
+  .device.c4 .limit{width:42px;padding:4px 0 6px;border-radius:9px;}
+  .device.c4 .limit .t{font-size:8px;}
+  .device.c4 .limit .n{font-size:18px;}
+  .device.c4 .speed{top:12px;}
+  .device.c4 .speed .n{font-size:clamp(30px,10vw,46px);}
+  .device.c4 .speed .u{font-size:11px;margin-top:0;}
+  .device.c4 .tr{top:11px;right:11px;}
+  .device.c4 .wheel{width:40px;height:40px;}
+  .device.c4 .dm{width:38px;height:38px;bottom:11px;left:11px;}
+  .device.c4 .status{bottom:12px;padding:6px 13px;gap:8px;}
+  .device.c4 .status .txt{font-size:12px;}
+  .device.c4 .status .dot{width:8px;height:8px;}
+  .c4cap{display:none;text-align:center;margin-top:12px;font-size:12px;color:var(--faint);letter-spacing:.02em;}
+  .device.c4 ~ .c4cap, .c4cap.show{display:block;}
+
   .periph{position:absolute;inset:0;pointer-events:none;border-radius:20px;
     box-shadow:inset 0 0 0 0 rgba(0,0,0,0);transition:box-shadow .5s ease;z-index:5;}
   .redwash{position:absolute;inset:0;pointer-events:none;background:#ff2f26;opacity:0;border-radius:20px;z-index:5;}
@@ -221,6 +242,10 @@
       <button data-view="real">Real drive</button>
     </div>
     <div class="tools-right">
+      <button class="pill-btn" id="c4Btn" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="4" width="10" height="16" rx="2"/></svg>
+        <span>comma four</span>
+      </button>
       <button class="pill-btn" id="navBtn" aria-pressed="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
         <span>Nav</span>
@@ -267,6 +292,7 @@
         <div class="nav-eta"><span class="t">11:00 AM</span><span class="m">4 min</span><span class="d">0.5 mi</span></div>
       </div>
     </div>
+    <div class="c4cap" id="c4cap">comma four &middot; 1.9&Prime; display, shown at scale</div>
   </div>
 
   <div class="deck">
@@ -863,7 +889,14 @@
   // nav split toggle
   const navBtn=document.getElementById('navBtn'), deviceEl=document.getElementById('device');
   navBtn.addEventListener('click',()=>{ const on=deviceEl.classList.toggle('nav-on');
-    navBtn.classList.toggle('on',on); navBtn.setAttribute('aria-pressed',on); });
+    navBtn.classList.toggle('on',on); navBtn.setAttribute('aria-pressed',on);
+    if(on && deviceEl.classList.contains('c4')){ deviceEl.classList.remove('c4'); c4Btn.classList.remove('on'); c4Btn.setAttribute('aria-pressed','false'); c4cap.classList.remove('show'); } });
+
+  // comma four (small screen) toggle
+  const c4Btn=document.getElementById('c4Btn'), c4cap=document.getElementById('c4cap');
+  c4Btn.addEventListener('click',()=>{ const on=deviceEl.classList.toggle('c4');
+    c4Btn.classList.toggle('on',on); c4Btn.setAttribute('aria-pressed',on); c4cap.classList.toggle('show',on);
+    if(on && deviceEl.classList.contains('nav-on')){ deviceEl.classList.remove('nav-on'); navBtn.classList.remove('on'); navBtn.setAttribute('aria-pressed','false'); } });
 
   resize(); syncLabels(); requestAnimationFrame(frame);
 })();
