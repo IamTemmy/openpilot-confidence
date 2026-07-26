@@ -74,6 +74,7 @@
 
   .periph{position:absolute;inset:0;pointer-events:none;border-radius:20px;
     box-shadow:inset 0 0 0 0 rgba(0,0,0,0);transition:box-shadow .5s ease;z-index:5;}
+  .redwash{position:absolute;inset:0;pointer-events:none;background:#ff2f26;opacity:0;border-radius:20px;z-index:5;}
 
   .hud{position:absolute;inset:0;z-index:6;pointer-events:none;padding:clamp(12px,2.4vw,26px);}
   .tl{position:absolute;top:clamp(12px,2.4vw,26px);left:clamp(12px,2.4vw,26px);
@@ -237,6 +238,7 @@
         <video id="realvid" class="realvid" muted loop playsinline preload="auto"></video>
         <canvas id="road"></canvas>
         <div class="periph" id="periph"></div>
+        <div class="redwash" id="redwash"></div>
         <div class="hud">
           <div class="tl">
             <div class="setspeed"><div class="lbl">MAX</div><div class="val" id="setspeed">65</div></div>
@@ -623,7 +625,8 @@
   // ---------- chrome ----------
   const el={speed:document.getElementById('speed'),setspeed:document.getElementById('setspeed'),
     limit:document.getElementById('limit'),wheel:document.getElementById('wheel'),
-    dm:document.getElementById('dm'),status:document.getElementById('status'),periph:document.getElementById('periph')};
+    dm:document.getElementById('dm'),status:document.getElementById('status'),periph:document.getElementById('periph'),
+    redwash:document.getElementById('redwash')};
 
   function wheelSVG(load){
     const mag=Math.abs(load)/100, col=mag>0.94?'#FF4438':mag>0.8?'#FFB020':'#F2F5F7';
@@ -664,12 +667,14 @@
       el.status.querySelector('.txt').textContent=ch.word;
       el.status.style.borderColor=ch.border; el.status.classList.add('show');
       if(ch.sev===2){
-        // red states breathe hard: a flash that grows almost to a full-screen red wash and recedes,
-        // so it catches the eye in bright daylight without ever freezing as a solid panel
+        // whole screen breathes: a red wash pulses from near-clear to almost full red, then recedes
         const p=0.5+0.5*Math.sin((now||0)/300*Math.PI);   // ~600ms cycle
+        el.redwash.style.transition='none';
+        el.redwash.style.opacity=(0.05+0.78*p).toFixed(3);
         el.periph.style.transition='none';
-        el.periph.style.boxShadow=`inset 0 0 0 ${(6+5*p).toFixed(0)}px rgba(255,60,48,${(0.8+0.2*p).toFixed(2)}), inset 0 0 ${(110+300*p).toFixed(0)}px rgba(255,48,38,${(0.12+0.52*p).toFixed(2)})`;
+        el.periph.style.boxShadow=`inset 0 0 0 ${(6+6*p).toFixed(0)}px rgba(255,72,60,${(0.85+0.15*p).toFixed(2)})`;
       } else {
+        el.redwash.style.transition='opacity .35s ease'; el.redwash.style.opacity='0';
         el.periph.style.transition='box-shadow .4s ease';
         el.periph.style.boxShadow=ch.glow;
       }
@@ -677,6 +682,7 @@
       el.status.querySelector('.dot').style.background='var(--go)';
       el.status.querySelector('.txt').textContent='engaged';
       el.status.style.borderColor='var(--stroke)'; el.status.classList.remove('show');
+      el.redwash.style.transition='opacity .5s ease'; el.redwash.style.opacity='0';
       el.periph.style.transition='box-shadow .5s ease'; el.periph.style.boxShadow='transparent';
     }
   }
