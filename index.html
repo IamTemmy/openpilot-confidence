@@ -175,7 +175,7 @@
   .shout-big{font-size:clamp(22px,5vw,40px);font-weight:800;color:#fff;line-height:1;text-transform:lowercase;}
   .shout-sub{font-size:clamp(12px,2.2vw,18px);font-weight:600;color:rgba(255,255,255,.72);text-transform:lowercase;}
   .after-glow{position:absolute;inset:0;z-index:2;border-radius:12px;pointer-events:none;
-    box-shadow:inset 0 0 0 0 rgba(0,0,0,0);transition:box-shadow .5s ease;}
+    background:#ff2f26;opacity:0;box-shadow:inset 0 0 0 0 rgba(0,0,0,0);}
   .nudge{position:absolute;left:50%;bottom:12px;transform:translateX(-50%) translateY(6px);z-index:4;
     font-size:12px;font-weight:600;color:#fff;background:rgba(8,11,15,.72);backdrop-filter:blur(6px);
     border:1px solid var(--stroke);border-radius:999px;padding:6px 13px;opacity:0;
@@ -652,7 +652,7 @@
     el.setspeed.textContent=Math.round(S.setspeed);
     el.limit.textContent=Math.round(S.limit);
     el.wheel.innerHTML=wheelSVG(S.load);
-    const c=S.conf, smag=Math.abs(S.load)/100, bmag=(S.lon<0?Math.abs(S.lon)/100:0);
+    const c=S.confT, smag=Math.abs(S.loadT)/100, bmag=(S.lonT<0?Math.abs(S.lonT)/100:0);
     const cand=[];
     if(c<24) cand.push({sev:2,lvl:'red',word:'take the wheel, low confidence ahead',dot:'var(--crit)',glow:'inset 0 0 0 6px rgba(255,68,56,.95), inset 0 0 90px rgba(255,68,56,.4)',border:'rgba(255,68,56,.55)',pri:0});
     else if(c<48) cand.push({sev:1,lvl:'amber',word:'uncertain road, stay ready',dot:'var(--warn)',glow:'inset 0 0 0 4px rgba(255,176,32,.8), inset 0 0 60px rgba(255,176,32,.22)',border:'rgba(255,176,32,.4)',pri:3});
@@ -761,7 +761,7 @@
     {n:'Open highway',     conf:94, load:12, lon:8,   lead:0.58, curve:0.05, speed:64, set:65, limit:65},
     {n:'Faded markings',   conf:46, load:16, lon:0,   lead:null, curve:0.10, speed:41, set:45, limit:45},
     {n:'Sharp off-ramp',   conf:72, load:90, lon:-30, lead:null, curve:0.34, speed:33, set:40, limit:40},
-    {n:'Crosswind gust',   conf:60, load:70, lon:6,   lead:0.50, curve:0.08, speed:58, set:60, limit:60},
+    {n:'Crosswind gust',   conf:60, load:84, lon:6,   lead:0.50, curve:0.08, speed:58, set:60, limit:60},
     {n:'Low-sun glare',    conf:18, load:24, lon:-20, lead:0.46, curve:0.06, speed:44, set:50, limit:50},
     {n:'Construction zone',conf:34, load:40, lon:-48, lead:0.40, curve:0.14, speed:28, set:35, limit:35},
     {n:'Lead braking hard',conf:78, load:10, lon:-92, lead:0.30, curve:0.05, speed:40, set:45, limit:45},
@@ -827,24 +827,25 @@
     if(dmBcol!==_dmB){ dmBefore.innerHTML=dmMini(dmBcol); _dmB=dmBcol; }
     const shoutOn=v>55;
     if(shoutOn!==_shout){ shoutEl.classList.toggle('on',shoutOn); _shout=shoutOn; }
-    // AFTER: continuous escalation: subtle nudge -> urgent red peripheral flood, road never covered
+    // AFTER: same breathing language as the main view (soft slow amber, aggressive fast red)
     if(v<28){
-      afterGlow.style.boxShadow='inset 0 0 0 0 rgba(0,0,0,0)';
+      afterGlow.style.transition='opacity .35s ease'; afterGlow.style.opacity='0';
       if(_dmA!=='#2FE07A'){ dmAfter.innerHTML=dmMini('#2FE07A'); _dmA='#2FE07A'; }
       if(_nudge!==''){ nudgeEl.classList.remove('on'); _nudge=''; }
     } else {
-      const tt=(v-28)/72;                                  // 0..1 severity
-      const warm=tt<0.55;
-      const cr=warm?'255,176,32':'255,68,56';
-      const dmcol=warm?'#FFB020':'#FF4438';
-      const pulseAmt = tt>0.4 ? (0.5+0.5*Math.sin(now/(1200-820*tt)*Math.PI*2)) : 0; // faster & deeper with severity
-      const spread=(26+72*tt)*(0.82+0.4*pulseAmt);
-      const alpha=(0.13+0.44*tt)*(0.72+0.5*pulseAmt);
-      afterGlow.style.boxShadow=`inset 0 0 ${spread.toFixed(0)}px rgba(${cr},${Math.min(alpha,0.9).toFixed(2)})`;
+      const tt=(v-28)/72, red=tt>=0.55, dmcol=red?'#FF4438':'#FFB020';
+      afterGlow.style.transition='none';
+      if(red){
+        const p=0.5+0.5*Math.sin(now/300*Math.PI);
+        afterGlow.style.background='#ff2f26'; afterGlow.style.opacity=(0.05+0.78*p).toFixed(3);
+      } else {
+        const q=0.5+0.5*Math.sin(now/700*Math.PI);
+        afterGlow.style.background='#ffb020'; afterGlow.style.opacity=(0.05+0.13*q).toFixed(3);
+      }
       if(dmcol!==_dmA){ dmAfter.innerHTML=dmMini(dmcol); _dmA=dmcol; }
       const txt = tt<0.55?'eyes on the road' : tt<0.82?'watch the road' : 'look up now';
       if(_nudge!==txt){ nudgeEl.textContent=txt; nudgeEl.classList.add('on'); _nudge=txt; }
-      nudgeEl.style.borderColor = warm?'rgba(255,176,32,.5)':'rgba(255,68,56,.65)';
+      nudgeEl.style.borderColor = red?'rgba(255,68,56,.65)':'rgba(255,176,32,.5)';
     }
     // reserved sound: one buzz at onset to catch the eye, then a cue that quickens as attention worsens
     if(S.sound && attnCur>=28){
