@@ -168,6 +168,11 @@
   .leg .d{font-size:12px;color:var(--muted);line-height:1.5;margin-top:2px;}
 
   .foot{width:100%;max-width:1040px;font-size:12px;color:var(--faint);line-height:1.6;}
+  .hint{width:100%;max-width:1040px;text-align:center;font-size:13px;color:var(--muted);
+    margin:-2px 0 -6px;transition:opacity .4s ease;}
+  .hint span{display:inline-block;margin-right:4px;animation:hintbob 1.6s ease-in-out infinite;}
+  @keyframes hintbob{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+  @media(prefers-reduced-motion:reduce){.hint span{animation:none;}}
   .foot b{color:var(--muted);font-weight:600;}
   .foot a{color:var(--muted);}
 
@@ -296,6 +301,8 @@
     </div>
     <div class="c4cap" id="c4cap">comma four &middot; 1.9&Prime; display, shown at scale</div>
   </div>
+
+  <div class="hint" id="hint"><span>&#9757;</span> tap a scenario or drag a slider to see the UI react</div>
 
   <div class="deck">
     <div>
@@ -699,7 +706,8 @@
       el.status.style.borderColor=ch.border; el.status.classList.add('show');
       if(ch.sev===2){
         // whole screen breathes: a red wash pulses from near-clear to almost full red, then recedes
-        const p=0.5+0.5*Math.sin((now||0)/300*Math.PI);   // ~600ms cycle
+        // (reduced-motion: hold it steady and strong instead of flashing, to avoid photosensitivity issues)
+        const p=reduce?0.68:(0.5+0.5*Math.sin((now||0)/300*Math.PI));   // ~600ms cycle
         el.redwash.style.transition='none';
         el.redwash.style.background='#ff2f26';
         el.redwash.style.opacity=(0.05+0.78*p).toFixed(3);
@@ -707,7 +715,7 @@
         el.periph.style.boxShadow=`inset 0 0 0 ${(6+6*p).toFixed(0)}px rgba(255,72,60,${(0.85+0.15*p).toFixed(2)})`;
       } else {
         // amber breathes too, but slow and soft, and never covers the screen (get ready, not act now)
-        const q=0.5+0.5*Math.sin((now||0)/700*Math.PI);   // ~1400ms cycle, gentler
+        const q=reduce?0.5:(0.5+0.5*Math.sin((now||0)/700*Math.PI));   // ~1400ms cycle, gentler
         el.redwash.style.transition='none';
         el.redwash.style.background='#ffb020';
         el.redwash.style.opacity=(0.05+0.13*q).toFixed(3);  // stays light: road always visible
@@ -867,10 +875,10 @@
       const tt=(v-28)/72, red=tt>=0.55, dmcol=red?'#FF4438':'#FFB020';
       afterGlow.style.transition='none';
       if(red){
-        const p=0.5+0.5*Math.sin(now/300*Math.PI);
+        const p=reduce?0.68:(0.5+0.5*Math.sin(now/300*Math.PI));
         afterGlow.style.background='#ff2f26'; afterGlow.style.opacity=(0.05+0.78*p).toFixed(3);
       } else {
-        const q=0.5+0.5*Math.sin(now/700*Math.PI);
+        const q=reduce?0.5:(0.5+0.5*Math.sin(now/700*Math.PI));
         afterGlow.style.background='#ffb020'; afterGlow.style.opacity=(0.05+0.13*q).toFixed(3);
       }
       if(dmcol!==_dmA){ dmAfter.innerHTML=dmMini(dmcol); _dmA=dmcol; }
@@ -899,6 +907,15 @@
   c4Btn.addEventListener('click',()=>{ const on=deviceEl.classList.toggle('c4');
     c4Btn.classList.toggle('on',on); c4Btn.setAttribute('aria-pressed',on); c4cap.classList.toggle('show',on);
     if(on && deviceEl.classList.contains('nav-on')){ deviceEl.classList.remove('nav-on'); navBtn.classList.remove('on'); navBtn.setAttribute('aria-pressed','false'); } });
+
+  // hide the first-load hint once the user interacts with any control
+  const hintEl=document.getElementById('hint');
+  if(hintEl){
+    const dropHint=()=>{ hintEl.style.opacity='0'; setTimeout(()=>hintEl.remove(),450); };
+    document.querySelector('.deck').addEventListener('pointerdown',dropHint,{once:true});
+    document.querySelector('.toolbar').addEventListener('pointerdown',dropHint,{once:true});
+    setTimeout(dropHint,12000);
+  }
 
   resize(); syncLabels(); requestAnimationFrame(frame);
 })();
