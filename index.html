@@ -521,42 +521,45 @@
     ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
     ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
   }
-  // lead vehicle glyph: a flat rear silhouette; brake lights glow as openpilot brakes toward it
+  // lead vehicle glyph: a rounded modern car rear in cool silver; brake lights glow on braking
   function drawLead(t, brakeGlow){
     const x=centerX(t), baseY=roadY(t);
-    const w=Math.max(26,pathHalf(t)*1.28), carH=w*0.62;
-    const bodyBottom=baseY-carH*0.06, bodyTop=baseY-carH*0.60, cabinTop=baseY-carH*0.96;
-    const bh=bodyBottom-bodyTop, r=Math.min(9,carH*0.12), r2=Math.min(8,carH*0.14);
+    const w=Math.max(28,pathHalf(t)*1.3), carH=w*0.60;
+    const bodyBottom=baseY-carH*0.04, bodyTop=baseY-carH*0.56, roofTop=baseY-carH*0.94;
+    const bh=bodyBottom-bodyTop, rB=carH*0.26, rC=carH*0.40, cabinW=w*0.66, cl=x-cabinW/2;
     ctx.save();
+    // brake bloom
     if(brakeGlow>0.02){
-      const gr=ctx.createRadialGradient(x,baseY-carH*0.4,2,x,baseY-carH*0.4,w*1.15);
+      const gr=ctx.createRadialGradient(x,baseY-carH*0.42,2,x,baseY-carH*0.42,w*1.2);
       gr.addColorStop(0,`rgba(255,42,30,${(0.55*brakeGlow).toFixed(2)})`); gr.addColorStop(1,'rgba(255,42,30,0)');
-      ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(x,baseY-carH*0.4,w*1.15,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(x,baseY-carH*0.42,w*1.2,0,Math.PI*2); ctx.fill();
     }
     // ground shadow
-    ctx.fillStyle='rgba(0,0,0,.5)'; ctx.beginPath(); ctx.ellipse(x,baseY,w*0.52,carH*0.1,0,0,Math.PI*2); ctx.fill();
-    // wheels
-    ctx.fillStyle='#0a0d10'; const ww=w*0.17, wh=carH*0.22, wy=bodyBottom-wh*0.35;
-    rr(x-w*0.40,wy,ww,wh,wh*0.35); ctx.fill(); rr(x+w*0.40-ww,wy,ww,wh,wh*0.35); ctx.fill();
-    // body (cabin + lower body, shaded)
-    const bg=ctx.createLinearGradient(0,cabinTop,0,bodyBottom);
-    bg.addColorStop(0,'#273039'); bg.addColorStop(1,'#131920');
-    ctx.fillStyle=bg; ctx.strokeStyle='rgba(205,218,228,.5)'; ctx.lineWidth=Math.max(1,w*0.022);
-    rr(x-w*0.35,cabinTop,w*0.70,(bodyTop-cabinTop)+r2*2,r2); ctx.fill();
-    rr(x-w/2,bodyTop,w,bh,r); ctx.fill(); rr(x-w/2,bodyTop,w,bh,r); ctx.stroke();
-    // rear window
-    ctx.fillStyle='rgba(120,150,170,.28)';
-    rr(x-w*0.28,cabinTop+carH*0.05,w*0.56,(bodyTop-cabinTop)*0.6,r2*0.7); ctx.fill();
-    // taillights (brake-driven)
-    const b=0.4+0.6*brakeGlow;
+    ctx.fillStyle='rgba(0,0,0,.5)'; ctx.beginPath(); ctx.ellipse(x,baseY,w*0.55,carH*0.1,0,0,Math.PI*2); ctx.fill();
+    // wheels (rounded, dark)
+    ctx.fillStyle='#0b0e12'; const ww=w*0.18, wh=carH*0.24, wy=bodyBottom-wh*0.4;
+    rr(x-w*0.40,wy,ww,wh,wh*0.45); ctx.fill(); rr(x+w*0.40-ww,wy,ww,wh,wh*0.45); ctx.fill();
+    // silver body first, then domed cabin on top (same fill = seamless)
+    const bg=ctx.createLinearGradient(0,roofTop,0,bodyBottom);
+    bg.addColorStop(0,'#eef3f6'); bg.addColorStop(.5,'#c6d0d8'); bg.addColorStop(1,'#9aa6af');
+    ctx.fillStyle=bg; ctx.strokeStyle='rgba(55,68,78,.5)'; ctx.lineWidth=Math.max(1,w*0.02);
+    rr(x-w/2,bodyTop,w,bh,rB); ctx.fill(); ctx.stroke();
+    rr(cl,roofTop,cabinW,(bodyTop-roofTop)+rC,rC); ctx.fill();
+    // rear window (dark tinted glass) + gloss highlight
+    ctx.fillStyle='rgba(38,50,60,.85)';
+    rr(x-cabinW*0.40,roofTop+carH*0.08,cabinW*0.80,(bodyTop-roofTop)*0.66,rC*0.55); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.20)';
+    rr(x-cabinW*0.40,roofTop+carH*0.07,cabinW*0.80,carH*0.05,rC*0.4); ctx.fill();
+    // taillights (pill, red, brake-driven) pop on the silver
+    const b=0.55+0.45*brakeGlow;
     ctx.shadowColor=`rgba(255,40,28,${(0.9*brakeGlow).toFixed(2)})`; ctx.shadowBlur=18*brakeGlow;
-    ctx.fillStyle=`rgba(255,${Math.round(70-42*brakeGlow)},${Math.round(54-40*brakeGlow)},${b.toFixed(2)})`;
-    const tlY=bodyTop+bh*0.26, tlH=bh*0.26, tlW=w*0.22;
-    rr(x-w*0.44,tlY,tlW,tlH,tlH*0.35); ctx.fill(); rr(x+w*0.44-tlW,tlY,tlW,tlH,tlH*0.35); ctx.fill();
+    ctx.fillStyle=`rgba(${Math.round(205+50*brakeGlow)},${Math.round(46-32*brakeGlow)},${Math.round(42-30*brakeGlow)},${b.toFixed(2)})`;
+    const tlY=bodyTop+bh*0.30, tlH=bh*0.22, tlW=w*0.24;
+    rr(x-w*0.45,tlY,tlW,tlH,tlH*0.5); ctx.fill(); rr(x+w*0.45-tlW,tlY,tlW,tlH,tlH*0.5); ctx.fill();
     ctx.shadowBlur=0;
-    // bumper + plate
-    ctx.fillStyle='rgba(10,14,18,.9)'; rr(x-w*0.46,bodyBottom-bh*0.18,w*0.92,bh*0.15,r*0.5); ctx.fill();
-    ctx.fillStyle='rgba(225,232,238,.78)'; rr(x-w*0.10,bodyBottom-bh*0.17,w*0.20,bh*0.11,2); ctx.fill();
+    // bumper (darker silver) + plate
+    ctx.fillStyle='rgba(118,130,140,.9)'; rr(x-w*0.46,bodyBottom-bh*0.20,w*0.92,bh*0.15,rB*0.6); ctx.fill();
+    ctx.fillStyle='rgba(240,244,247,.9)'; rr(x-w*0.11,bodyBottom-bh*0.19,w*0.22,bh*0.11,2); ctx.fill();
     ctx.restore();
   }
 
