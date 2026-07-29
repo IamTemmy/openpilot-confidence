@@ -685,7 +685,7 @@
       <circle cx="26" cy="24" r="4.4" fill="none" stroke="#cfe9d8" stroke-width="2.2"/>
       <path d="M18 37 q8 -8 16 0" fill="none" stroke="#cfe9d8" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
-  let level='ok';
+  let level='ok', critStart=0, critActive=false;   // critStart: when the current red episode began (shared by flash + beep)
   function updateChrome(now){
     el.speed.textContent=Math.round(S.speed);
     el.setspeed.textContent=Math.round(S.setspeed);
@@ -706,16 +706,18 @@
       el.status.querySelector('.txt').textContent=ch.word;
       el.status.style.borderColor=ch.border; el.status.classList.add('show');
       if(ch.sev===2){
-        // whole screen breathes: a red wash pulses from near-clear to almost full red, then recedes
+        // whole screen breathes: starts clear at episode start, first red spike ~300ms in, then every 600ms
         // (reduced-motion: hold it steady and strong instead of flashing, to avoid photosensitivity issues)
-        const ph=((now||0)%600)/600;
-        const p=reduce?0.6:Math.pow(0.5-0.5*Math.cos(ph*2*Math.PI),4);   // spikes at the peak, locked to the beep
+        if(!critActive){ critStart=(now||0); critActive=true; }
+        const ph=(((now||0)-critStart)%600)/600;
+        const p=reduce?0.6:Math.pow(0.5-0.5*Math.cos(ph*2*Math.PI),4);   // trough at start, spikes at the peak, locked to the beep
         el.redwash.style.transition='none';
         el.redwash.style.background='#ff2f26';
         el.redwash.style.opacity=(0.05+0.78*p).toFixed(3);
         el.periph.style.transition='none';
         el.periph.style.boxShadow=`inset 0 0 0 ${(6+6*p).toFixed(0)}px rgba(255,72,60,${(0.85+0.15*p).toFixed(2)})`;
       } else {
+        critActive=false;
         // amber breathes too, but slow and soft, and never covers the screen (get ready, not act now)
         const q=reduce?0.5:(0.5+0.5*Math.sin((now||0)/700*Math.PI));   // ~1400ms cycle, gentler
         el.redwash.style.transition='none';
@@ -724,7 +726,7 @@
         el.periph.style.transition='none';
         el.periph.style.boxShadow=`inset 0 0 0 4px rgba(255,176,32,${(0.55+0.3*q).toFixed(2)}), inset 0 0 ${(40+30*q).toFixed(0)}px rgba(255,176,32,.18)`;
       }
-    } else { level='ok';
+    } else { level='ok'; critActive=false;
       el.status.querySelector('.dot').style.background='var(--go)';
       el.status.querySelector('.txt').textContent='engaged';
       el.status.style.borderColor='var(--stroke)'; el.status.classList.remove('show');
@@ -736,7 +738,7 @@
   // ---------- audio (synth, reserved) ----------
   let actx=null, prevLevel='ok', lastPulse=0, lastFlashCyc=-1;
   const FLASH_P=600;                          // one clock shared by the red flash and the beep
-  const flashCyc=now=>Math.floor(((now||0)+FLASH_P/2)/FLASH_P);  // increments exactly at each flash peak
+  const flashCyc=now=>Math.floor((((now||0)-critStart)+FLASH_P/2)/FLASH_P);  // increments at each flash peak, from episode start
   function ensureAudio(){ if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } if(actx&&actx.state==='suspended') actx.resume(); }
   function tone(freq,dur,o){ if(!actx)return; o=o||{}; const t0=actx.currentTime+(o.delay||0);
     const osc=actx.createOscillator(), g=actx.createGain(); osc.type=o.type||'triangle'; osc.frequency.value=freq;
@@ -755,10 +757,8 @@
     if(!S.sound){ prevLevel=level; return; }
     if(level!==prevLevel){
       if(level==='amber'&&prevLevel==='ok') earcon.amber();
-      else if(level==='red') earcon.handoff();
-      else if(level==='limit') earcon.limit();
-      else if(level==='brakelimit') earcon.brake();
       else if(level==='ok'&&(prevLevel==='red'||prevLevel==='limit'||prevLevel==='brakelimit')) earcon.recover();
+      // critical states get no immediate beep: the first flash peak is the first beep, so it never lands off-beat
       lastPulse=now; prevLevel=level; lastFlashCyc=flashCyc(now);
     }
     // repeat locked to the flash peak: same clock, so flash and beep pulse together every cycle
