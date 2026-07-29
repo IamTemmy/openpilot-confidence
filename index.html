@@ -708,7 +708,9 @@
       if(ch.sev===2){
         // whole screen breathes: a red wash pulses from near-clear to almost full red, then recedes
         // (reduced-motion: hold it steady and strong instead of flashing, to avoid photosensitivity issues)
-        const p=reduce?0.68:(0.5+0.5*Math.sin((now||0)/300*Math.PI));   // ~600ms cycle
+        // asymmetric duty cycle (slomobile): road stays visible most of the cycle, red spikes briefly.
+        // raising the sine to a power biases it low, so opacity ramps exponentially and peaks only ~20% of the time
+        const p=reduce?0.6:Math.pow(0.5+0.5*Math.sin((now||0)/300*Math.PI),4);   // ~600ms cycle
         el.redwash.style.transition='none';
         el.redwash.style.background='#ff2f26';
         el.redwash.style.opacity=(0.05+0.78*p).toFixed(3);
@@ -876,7 +878,7 @@
       const tt=(v-28)/72, red=tt>=0.55, dmcol=red?'#FF4438':'#FFB020';
       afterGlow.style.transition='none';
       if(red){
-        const p=reduce?0.68:(0.5+0.5*Math.sin(now/300*Math.PI));
+        const p=reduce?0.6:Math.pow(0.5+0.5*Math.sin(now/300*Math.PI),4);
         afterGlow.style.background='#ff2f26'; afterGlow.style.opacity=(0.05+0.78*p).toFixed(3);
       } else {
         const q=reduce?0.5:(0.5+0.5*Math.sin(now/700*Math.PI));
