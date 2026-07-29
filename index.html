@@ -708,9 +708,8 @@
       if(ch.sev===2){
         // whole screen breathes: a red wash pulses from near-clear to almost full red, then recedes
         // (reduced-motion: hold it steady and strong instead of flashing, to avoid photosensitivity issues)
-        // asymmetric duty cycle (slomobile): road stays visible most of the cycle, red spikes briefly.
-        // raising the sine to a power biases it low, so opacity ramps exponentially and peaks only ~20% of the time
-        const p=reduce?0.6:Math.pow(0.5+0.5*Math.sin((now||0)/300*Math.PI),4);   // ~600ms cycle
+        const ph=((now||0)%600)/600;
+        const p=reduce?0.6:Math.pow(0.5-0.5*Math.cos(ph*2*Math.PI),4);   // spikes at the peak, locked to the beep
         el.redwash.style.transition='none';
         el.redwash.style.background='#ff2f26';
         el.redwash.style.opacity=(0.05+0.78*p).toFixed(3);
@@ -735,7 +734,9 @@
   }
 
   // ---------- audio (synth, reserved) ----------
-  let actx=null, prevLevel='ok', lastPulse=0;
+  let actx=null, prevLevel='ok', lastPulse=0, lastFlashCyc=-1;
+  const FLASH_P=600;                          // one clock shared by the red flash and the beep
+  const flashCyc=now=>Math.floor(((now||0)+FLASH_P/2)/FLASH_P);  // increments exactly at each flash peak
   function ensureAudio(){ if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } if(actx&&actx.state==='suspended') actx.resume(); }
   function tone(freq,dur,o){ if(!actx)return; o=o||{}; const t0=actx.currentTime+(o.delay||0);
     const osc=actx.createOscillator(), g=actx.createGain(); osc.type=o.type||'triangle'; osc.frequency.value=freq;
@@ -758,12 +759,16 @@
       else if(level==='limit') earcon.limit();
       else if(level==='brakelimit') earcon.brake();
       else if(level==='ok'&&(prevLevel==='red'||prevLevel==='limit'||prevLevel==='brakelimit')) earcon.recover();
-      lastPulse=now; prevLevel=level;
+      lastPulse=now; prevLevel=level; lastFlashCyc=flashCyc(now);
     }
-    // sustained, tight repeats while critical (road events happen in seconds)
-    if(level==='red'&&now-lastPulse>600){ earcon.handoff(); lastPulse=now; }
-    if(level==='limit'&&now-lastPulse>450){ earcon.limit(); lastPulse=now; }
-    if(level==='brakelimit'&&now-lastPulse>500){ earcon.brake(); lastPulse=now; }
+    // repeat locked to the flash peak: same clock, so flash and beep pulse together every cycle
+    if(level==='red'||level==='limit'||level==='brakelimit'){
+      const cyc=flashCyc(now);
+      if(cyc!==lastFlashCyc){
+        if(level==='red') earcon.handoff(); else if(level==='limit') earcon.limit(); else earcon.brake();
+        lastFlashCyc=cyc;
+      }
+    }
   }
 
   // ---------- loop ----------
